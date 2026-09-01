@@ -11,7 +11,9 @@ yarn.lock
 .env.*.local
 
 # IDE and Editor
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/c_cpp_properties.json
 .idea/
 *.swp
 *.swo
