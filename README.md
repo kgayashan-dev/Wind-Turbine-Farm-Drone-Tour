@@ -3,7 +3,8 @@
 A modern OpenGL scene containing six wind turbines with rotating blades, an
 automatic drone route through the farm, a moving service vehicle with rotating
 wheels, a road, farm buildings, terrain details, mountains, fixed sunlight and
-long planar shadows.
+long planar shadows. A Dear ImGui panel provides live interactive control and
+displays the current scene coordinates.
 
 ## Build on macOS
 
@@ -14,6 +15,9 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build -j
 ./build/wind_turbine_farm
 ```
+
+The first configuration downloads Dear ImGui into the local `.deps` folder.
+Later builds reuse that copy.
 
 Or open this folder in VS Code, press **Cmd+Shift+B**, then choose
 **Terminal > Run Task > Run Wind Farm**.
@@ -37,3 +41,19 @@ Or open this folder in VS Code, press **Cmd+Shift+B**, then choose
 | `Esc` | Exit |
 
 The road and vehicle follow the X-axis, `+Y` is upward, and `+Z` crosses the farm.
+
+## Control panel
+
+The on-screen panel provides:
+
+- Start/pause controls for the complete scene, drone, turbines and vehicle
+- Drone, turbine and vehicle speed sliders
+- Drone-route, overview-orbit and vehicle-follow camera selection
+- Lighting and shadow checkboxes
+- Editable sun X, height and Z controls
+- Coordinate-axis visibility
+- Reset button
+- Live camera position, vehicle position, blade angle and frame rate
+
+The original keyboard controls remain available. Keyboard shortcuts are ignored
+while the control panel is actively capturing keyboard input.

@@ -25,6 +25,8 @@ yarn.lock
 # Build outputs
 dist/
 build/
+build-before-control-panel/
+.deps/
 out/
 *.o
 *.a

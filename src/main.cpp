@@ -1,6 +1,9 @@
 #include <OpenGL/gl3.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -23,6 +26,8 @@ struct State{
     int cameraMode=0;
     float droneProgress=.3f,overviewAngle=.65f,overviewRadius=42,overviewHeight=19;
     float bladeDegrees=0,vehicleX=-34,wheelDegrees=0;
+    float droneSpeed=.23f,turbineSpeed=72.0f,vehicleSpeed=6.2f;
+    glm::vec3 sunPosition{-34.0f,24.0f,-22.0f};
 };
 State state;
 int width=1280,height=720;
@@ -121,7 +126,10 @@ void draw(GLuint p,const Mesh&m,const glm::mat4&model,glm::vec3 colour,bool emis
     glUniform3fv(glGetUniformLocation(p,"objectColor"),1,glm::value_ptr(colour));setBool(p,"emissive",emissive);
     glBindVertexArray(m.vao);glDrawElements(GL_TRIANGLES,m.count,GL_UNSIGNED_INT,nullptr);}
 void resize(GLFWwindow*,int w,int h){width=std::max(w,1);height=std::max(h,1);glViewport(0,0,width,height);}
-void key(GLFWwindow*w,int code,int,int action,int){if(action!=GLFW_PRESS)return;switch(code){
+void key(GLFWwindow*w,int code,int,int action,int){
+    if(action!=GLFW_PRESS)return;
+    if(ImGui::GetCurrentContext()!=nullptr && ImGui::GetIO().WantCaptureKeyboard)return;
+    switch(code){
     case GLFW_KEY_ESCAPE:glfwSetWindowShouldClose(w,GL_TRUE);break;case GLFW_KEY_SPACE:state.paused=!state.paused;break;
     case GLFW_KEY_C:state.cameraMode=(state.cameraMode+1)%3;break;case GLFW_KEY_D:state.droneMoving=!state.droneMoving;break;
     case GLFW_KEY_T:state.turbinesMoving=!state.turbinesMoving;break;case GLFW_KEY_V:state.vehicleMoving=!state.vehicleMoving;break;
@@ -138,9 +146,19 @@ int main(){
     if(!window){glfwTerminate();return EXIT_FAILURE;}glfwMakeContextCurrent(window);glfwSwapInterval(1);
     glfwSetFramebufferSizeCallback(window,resize);glfwSetKeyCallback(window,key);glfwGetFramebufferSize(window,&width,&height);glViewport(0,0,width,height);
     GLuint program=makeProgram();if(!program){glfwDestroyWindow(window);glfwTerminate();return EXIT_FAILURE;}
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io=ImGui::GetIO();
+    io.ConfigFlags|=ImGuiConfigFlags_NavEnableKeyboard;
+    ImGui::StyleColorsDark();
+    ImGuiStyle& style=ImGui::GetStyle();
+    style.WindowRounding=8.0f;style.FrameRounding=5.0f;style.GrabRounding=5.0f;
+    style.WindowBorderSize=1.0f;
+    ImGui_ImplGlfw_InitForOpenGL(window,true);
+    ImGui_ImplOpenGL3_Init("#version 330 core");
     Mesh cube=makeCube(),cylinder=makeCylinder(40),tower=makeCylinder(48,.42f),cone=makeCylinder(40,.02f),sphere=makeSphere(20,32);
     glEnable(GL_DEPTH_TEST);glEnable(GL_MULTISAMPLE);glClearColor(.48f,.73f,.91f,1);
-    const glm::vec3 sun(-34,24,-22);const float vehicleSpeed=6.2f,wheelRadius=.38f;
+    const float wheelRadius=.38f;
     const glm::vec3 turbinePositions[]={{-15,0,-11},{0,0,-14},{15,0,-9},{-13,0,10},{3,0,7},{17,0,13}};
     double previous=glfwGetTime();
     std::cout<<"Wind Turbine Farm\nC camera | D drone | T turbines | V vehicle | H shadows | L light\n"
@@ -148,19 +166,25 @@ int main(){
 
     while(!glfwWindowShouldClose(window)){
         double now=glfwGetTime();float dt=std::min(static_cast<float>(now-previous),.05f);previous=now;glfwPollEvents();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
         if(!state.paused){
-            if(state.droneMoving)state.droneProgress+=.23f*dt;
-            if(state.turbinesMoving)state.bladeDegrees+=72*dt;
-            if(state.vehicleMoving){state.vehicleX+=vehicleSpeed*dt;state.wheelDegrees-=glm::degrees((vehicleSpeed*dt)/wheelRadius);
+            if(state.droneMoving)state.droneProgress+=state.droneSpeed*dt;
+            if(state.turbinesMoving)state.bladeDegrees+=state.turbineSpeed*dt;
+            if(state.vehicleMoving){state.vehicleX+=state.vehicleSpeed*dt;
+                state.wheelDegrees-=glm::degrees((state.vehicleSpeed*dt)/wheelRadius);
                 if(state.vehicleX>36)state.vehicleX=-36;}
             if(state.cameraMode==1)state.overviewAngle+=.12f*dt;
         }
-        if(glfwGetKey(window,GLFW_KEY_LEFT)==GLFW_PRESS)state.overviewAngle-=.85f*dt;
-        if(glfwGetKey(window,GLFW_KEY_RIGHT)==GLFW_PRESS)state.overviewAngle+=.85f*dt;
-        if(glfwGetKey(window,GLFW_KEY_UP)==GLFW_PRESS)state.overviewHeight+=7*dt;
-        if(glfwGetKey(window,GLFW_KEY_DOWN)==GLFW_PRESS)state.overviewHeight-=7*dt;
-        if(glfwGetKey(window,GLFW_KEY_EQUAL)==GLFW_PRESS)state.overviewRadius-=8*dt;
-        if(glfwGetKey(window,GLFW_KEY_MINUS)==GLFW_PRESS)state.overviewRadius+=8*dt;
+        if(!ImGui::GetIO().WantCaptureKeyboard){
+            if(glfwGetKey(window,GLFW_KEY_LEFT)==GLFW_PRESS)state.overviewAngle-=.85f*dt;
+            if(glfwGetKey(window,GLFW_KEY_RIGHT)==GLFW_PRESS)state.overviewAngle+=.85f*dt;
+            if(glfwGetKey(window,GLFW_KEY_UP)==GLFW_PRESS)state.overviewHeight+=7*dt;
+            if(glfwGetKey(window,GLFW_KEY_DOWN)==GLFW_PRESS)state.overviewHeight-=7*dt;
+            if(glfwGetKey(window,GLFW_KEY_EQUAL)==GLFW_PRESS)state.overviewRadius-=8*dt;
+            if(glfwGetKey(window,GLFW_KEY_MINUS)==GLFW_PRESS)state.overviewRadius+=8*dt;
+        }
         state.overviewHeight=std::clamp(state.overviewHeight,7.0f,30.0f);state.overviewRadius=std::clamp(state.overviewRadius,24.0f,58.0f);
 
         auto dronePoint=[](float p){return glm::vec3(18*std::sin(p),8.5f+1.7f*std::sin(2*p),17*std::sin(.5f*p));};
@@ -169,12 +193,56 @@ int main(){
         else if(state.cameraMode==1){camera={state.overviewRadius*std::cos(state.overviewAngle),state.overviewHeight,
             state.overviewRadius*std::sin(state.overviewAngle)};targetPoint={0,5,0};}
         else{camera=vehiclePosition+glm::vec3(-9,4.5f,7);targetPoint=vehiclePosition+glm::vec3(5,1,0);}
+
+        ImGui::SetNextWindowPos(ImVec2(18,18),ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(350,0),ImGuiCond_FirstUseEver);
+        ImGui::Begin("Wind Farm Control Panel",nullptr,ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::TextColored(ImVec4(.45f,.90f,.55f,1),"REAL-TIME SCENE CONTROLS");
+        ImGui::Separator();
+        if(ImGui::Button(state.paused?"Resume all":"Pause all",ImVec2(155,0)))state.paused=!state.paused;
+        ImGui::SameLine();
+        if(ImGui::Button("Reset scene",ImVec2(155,0)))state=State{};
+
+        if(ImGui::CollapsingHeader("Animation",ImGuiTreeNodeFlags_DefaultOpen)){
+            ImGui::Checkbox("Drone movement",&state.droneMoving);
+            ImGui::SliderFloat("Drone speed",&state.droneSpeed,.03f,.65f,"%.2f");
+            ImGui::Checkbox("Turbine rotation",&state.turbinesMoving);
+            ImGui::SliderFloat("Turbine speed",&state.turbineSpeed,0,180,"%.0f deg/s");
+            ImGui::Checkbox("Vehicle movement",&state.vehicleMoving);
+            ImGui::SliderFloat("Vehicle speed",&state.vehicleSpeed,0,14,"%.1f units/s");
+        }
+        if(ImGui::CollapsingHeader("Camera",ImGuiTreeNodeFlags_DefaultOpen)){
+            const char* modes[]={"Drone route","Overview orbit","Vehicle follow"};
+            ImGui::Combo("Camera mode",&state.cameraMode,modes,3);
+            if(state.cameraMode==1){
+                ImGui::SliderFloat("Orbit height",&state.overviewHeight,7,30,"%.1f");
+                ImGui::SliderFloat("Orbit radius",&state.overviewRadius,24,58,"%.1f");
+            }
+        }
+        if(ImGui::CollapsingHeader("Lighting and shadows",ImGuiTreeNodeFlags_DefaultOpen)){
+            ImGui::Checkbox("Enable lighting",&state.lighting);
+            ImGui::SameLine();ImGui::Checkbox("Enable shadows",&state.shadows);
+            ImGui::SliderFloat("Sun X",&state.sunPosition.x,-50,50,"%.1f");
+            ImGui::SliderFloat("Sun height",&state.sunPosition.y,18,45,"%.1f");
+            ImGui::SliderFloat("Sun Z",&state.sunPosition.z,-50,50,"%.1f");
+        }
+        if(ImGui::CollapsingHeader("Live coordinates",ImGuiTreeNodeFlags_DefaultOpen)){
+            ImGui::Text("Camera  X:%6.1f  Y:%5.1f  Z:%6.1f",camera.x,camera.y,camera.z);
+            ImGui::Text("Vehicle X:%6.1f  Y:%5.1f  Z:%6.1f",vehiclePosition.x,vehiclePosition.y,vehiclePosition.z);
+            ImGui::Text("Blade angle: %6.1f degrees",std::fmod(state.bladeDegrees,360.0f));
+            ImGui::Text("Frame rate: %.1f FPS",ImGui::GetIO().Framerate);
+        }
+        ImGui::Separator();
+        ImGui::Checkbox("Show coordinate axes",&state.axes);
+        ImGui::TextDisabled("MVP: clip = Projection x View x Model x vertex");
+        ImGui::End();
+
         glm::mat4 view=glm::lookAt(camera,targetPoint,{0,1,0});
         glm::mat4 projection=glm::perspective(glm::radians(45.0f),static_cast<float>(width)/height,.1f,140.0f);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);glUseProgram(program);
         glUniformMatrix4fv(glGetUniformLocation(program,"view"),1,GL_FALSE,glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(program,"projection"),1,GL_FALSE,glm::value_ptr(projection));
-        glUniform3fv(glGetUniformLocation(program,"lightPosition"),1,glm::value_ptr(sun));
+        glUniform3fv(glGetUniformLocation(program,"lightPosition"),1,glm::value_ptr(state.sunPosition));
         glUniform3fv(glGetUniformLocation(program,"cameraPosition"),1,glm::value_ptr(camera));
         glUniform1f(glGetUniformLocation(program,"shadowPlaneY"),.065f);
         setBool(program,"lightingEnabled",state.lighting);setBool(program,"shadowMode",false);
@@ -218,11 +286,15 @@ int main(){
             draw(program,cube,trs(o+glm::vec3(0,1.5f,0),{0,0,0},{.07f,3,.07f}),{0,1,0},true);
             draw(program,cube,trs(o+glm::vec3(0,0,1.5f),{0,0,0},{.07f,.07f,3}),{0,0,1},true);};
 
-        terrain();turbines();vehicle();if(state.axes)axes();draw(program,sphere,trs(sun,{0,0,0},{.82f,.82f,.82f}),{1,.70f,.11f},true);
+        terrain();turbines();vehicle();if(state.axes)axes();
+        draw(program,sphere,trs(state.sunPosition,{0,0,0},{.82f,.82f,.82f}),{1,.70f,.11f},true);
         if(state.shadows){setBool(program,"shadowMode",true);glEnable(GL_BLEND);glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
             glDepthMask(GL_FALSE);turbines();vehicle();glDepthMask(GL_TRUE);glDisable(GL_BLEND);setBool(program,"shadowMode",false);}
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
     }
+    ImGui_ImplOpenGL3_Shutdown();ImGui_ImplGlfw_Shutdown();ImGui::DestroyContext();
     destroy(cube);destroy(cylinder);destroy(tower);destroy(cone);destroy(sphere);glDeleteProgram(program);
     glfwDestroyWindow(window);glfwTerminate();return EXIT_SUCCESS;
 }

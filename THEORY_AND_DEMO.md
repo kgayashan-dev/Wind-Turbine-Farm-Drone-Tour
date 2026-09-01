@@ -26,6 +26,9 @@ translation animation, multiple cameras, lighting, long shadows and depth testin
 - **Long shadows:** The fixed sun is high enough to illuminate the complete scene
   but far to one side, creating a low light angle and long planar shadows.
 - **Visibility:** The z-buffer keeps the nearest fragment for every screen pixel.
+- **Interactive interface:** Dear ImGui directly changes animation, camera and
+  lighting state at runtime. The live coordinates make world-space movement and
+  the relationship between scene parameters and rendered output observable.
 
 ## Suggested three-minute demonstration
 
@@ -35,7 +38,9 @@ translation animation, multiple cameras, lighting, long shadows and depth testin
 4. Press `V` to stop/start the vehicle and explain wheel rotation.
 5. Press `C` for drone route, overview orbit and vehicle-follow cameras.
 6. Press `L` and `H` to isolate lighting and the long projected shadows.
-7. Explain `T × R × S`, MVP matrices and the z-buffer, then press `R`.
+7. Move the sun sliders and explain how the fixed light position changes shadow
+   direction and length.
+8. Explain `T × R × S`, MVP matrices and the z-buffer, then select **Reset scene**.
 
 ## Limitation
 
