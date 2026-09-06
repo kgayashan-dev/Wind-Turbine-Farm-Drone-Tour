@@ -1,19 +1,20 @@
-// Project animation declarations; implemented in src/Animation.cpp (motion and vehicle position).
+// Movement functions.
 #include "windfarm/Animation.hpp"
 
-// GLM angle helpers, including conversion from radians to degrees.
+// Angle conversion.
 #include <glm/trigonometric.hpp>
 
 namespace windfarm {
 
 // Update state in place; deltaTime is elapsed time in seconds.
+// Move objects for this frame.
 void updateAnimation(SceneState &state, float deltaTime) {
-  // Pausing skips all automatic motion, including the overview orbit.
+  // Stop movement when paused.
   if (state.paused) {
     return;
   }
 
-  // Progress moves the camera forward along the drone's mathematical route.
+  // Move the drone.
   if (state.droneMoving) {
     state.droneProgress += state.droneSpeed * deltaTime;
   }
@@ -23,7 +24,7 @@ void updateAnimation(SceneState &state, float deltaTime) {
     state.bladeDegrees += state.turbineSpeed * deltaTime;
   }
 
-  // The vehicle translates along +X. Wheel angle follows distance / radius.
+  // Move the vehicle and turn its wheels.
   if (state.vehicleMoving) {
     state.vehicleX += state.vehicleSpeed * deltaTime;
     state.wheelDegrees -=
@@ -41,7 +42,6 @@ void updateAnimation(SceneState &state, float deltaTime) {
   }
 }
 
-// Keep vehicle height and road centre fixed while its X coordinate changes.
 glm::vec3 vehiclePosition(const SceneState &state) {
   return {state.vehicleX, 0.25f, 0.0f};
 }

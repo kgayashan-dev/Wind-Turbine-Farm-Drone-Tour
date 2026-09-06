@@ -1,46 +1,40 @@
-// OpenGL draws the 3D graphics. GLFW creates the window and reads input.
-// OpenGL types and functions for GPU resources, rendering, and graphics state.
+// OpenGL drawing.
 #include <OpenGL/gl3.h>
-// Prevent GLFW from including another OpenGL header; choose the graphics API explicitly.
+// OpenGL is included separately.
 #define GLFW_INCLUDE_NONE
-// GLFW functions for windows, OpenGL contexts, timing, and keyboard/window events.
+// Window and input.
 #include <GLFW/glfw3.h>
 
-// Dear ImGui creates the control panel shown over the 3D scene.
-// Dear ImGui widgets, UI state, styling, and frame management.
+// Control panel widgets.
 #include <imgui.h>
-// Connects Dear ImGui to GLFW input and window events.
+// UI input.
 #include <imgui_impl_glfw.h>
-// Renders Dear ImGui draw data using OpenGL 3.
+// UI drawing.
 #include <imgui_impl_opengl3.h>
 
-// GLM provides vectors and transformation matrices.
-// GLM vector and matrix types used for positions, directions, and transforms.
+// Vectors and matrices.
 #include <glm/glm.hpp>
-// GLM translation, rotation, scaling, view, and perspective matrix helpers.
+// Move, rotate, and scale.
 #include <glm/gtc/matrix_transform.hpp>
-// glm::value_ptr exposes matrix/vector data for passing values to OpenGL.
+// Send maths data to OpenGL.
 #include <glm/gtc/type_ptr.hpp>
 
-// Standard minimum, maximum, and clamp helpers for limiting numeric values.
+// Limit values.
 #include <algorithm>
-// Standard mathematical functions such as sine, cosine, and floating-point remainder.
+// Maths functions.
 #include <cmath>
-// Standard exit status constants, including EXIT_SUCCESS and EXIT_FAILURE.
+// Exit codes.
 #include <cstdlib>
-// Standard console output streams for instructions and error messages.
+// Console messages.
 #include <iostream>
-// String storage for shader compiler and linker diagnostic messages.
+// Text storage.
 #include <string>
-// Resizable arrays for generated vertex data and triangle indices.
+// Lists of points and triangles.
 #include <vector>
 
 namespace
 {
 
-    // calculates and fixes the value at compile time; it cannot change.
-
-    // PI to generate circular shapes such as cylinders and spheres. A float only retains about 6–9 significant decimal digits, so the extra digits do not increase its actual precision.
     constexpr float PI = 3.14159265358979323846f;
 
     // Stores the GPU buffer IDs and triangle count of one 3D shape.
@@ -50,7 +44,6 @@ namespace
         GLuint vao = 0, vbo = 0, ebo = 0;
         GLsizei count = 0;
     };
-    // Stores every value that can change while the program is running.
     struct State
     {
         bool paused = false, droneMoving = true, turbinesMoving = true,
@@ -66,7 +59,6 @@ namespace
     State state;
     int width = 1280, height = 720; // initial window width
 
-    // The vertex shader moves each vertex from local space to screen space.
     const char *vertexSource = R"GLSL(
 #version 330 core
 layout(location=0) in vec3 aPosition;
@@ -93,7 +85,6 @@ void main(){
 }
 )GLSL";
 
-    // The fragment shader calculates the final colour of every visible pixel.
     const char *fragmentSource = R"GLSL(
 #version 330 core
 in vec3 worldPosition;
@@ -104,7 +95,6 @@ out vec4 color;
 void main(){
     // In shadow mode, draw the object as a transparent dark shape.
     if(shadowMode){color=vec4(.022,.025,.03,.48);return;}
-    // Emissive objects keep their colour without a lighting calculation.
     if(emissive||!lightingEnabled){color=vec4(objectColor,1);return;}
     // N, L, V and H mean normal, light, view and halfway vectors.
     vec3 N=normalize(normal),L=normalize(lightPosition-worldPosition);
@@ -139,7 +129,6 @@ void main(){
             glGetShaderInfoLog(o, n, nullptr, log.data());
         std::cerr << log << '\n';
     }
-    // Compiles both shaders and connects them into one OpenGL program.
     GLuint makeProgram()
     {
         auto compile = [](GLenum type, const char *s)
@@ -174,7 +163,6 @@ void main(){
         glAttachShader(p, fs);
         // Link both shaders into one executable rendering program.
         glLinkProgram(p);
-        // Delete the separate shaders because the linked program now owns their code.
         glDeleteShader(vs);
         glDeleteShader(fs);
         GLint ok = GL_FALSE;
@@ -190,7 +178,6 @@ void main(){
         return p;
     }
 
-    // Copies vertex and triangle data from CPU memory into GPU buffers.
     Mesh upload(const std::vector<float> &v, const std::vector<unsigned int> &i)
     {
         Mesh m;
@@ -219,7 +206,6 @@ void main(){
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
         // Allow the vertex shader to read position attribute 0.
         glEnableVertexAttribArray(0);
-        // Describe attribute 1 as the three normal floats after each position.
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
                               reinterpret_cast<void *>(3 * sizeof(float)));
         // Allow the vertex shader to read normal attribute 1.
@@ -249,7 +235,6 @@ void main(){
             12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20};
         return upload(v, i);
     }
-    // Creates a cylinder. A smaller top radius creates a tower or cone.
     Mesh makeCylinder(int segments, float topRadius = 1)
     {
         std::vector<float> v;
@@ -318,7 +303,6 @@ void main(){
     // Creates a model matrix: translate, then rotate, then scale.
     glm::mat4 trs(glm::vec3 p, glm::vec3 r, glm::vec3 s)
     {
-        // Start the model matrix by moving the object to its world position.
         glm::mat4 m = glm::translate(glm::mat4(1), p);
         // Rotate around Y, then X, then Z to orient the object.
         m = glm::rotate(m, glm::radians(r.y), {0, 1, 0});
@@ -332,7 +316,6 @@ void main(){
         // Send a C++ Boolean to the named GLSL uniform as 0 or 1.
         glUniform1i(glGetUniformLocation(p, n), v ? 1 : 0);
     }
-    // Sends one object's transformation and colour to the GPU, then draws it.
     void draw(GLuint p, const Mesh &m, const glm::mat4 &model, glm::vec3 colour,
               bool emissive = false)
     {
@@ -340,7 +323,6 @@ void main(){
         glUniformMatrix4fv(glGetUniformLocation(p, "model"), 1, GL_FALSE,
                            glm::value_ptr(model));
         glm::mat3 normal = glm::transpose(glm::inverse(glm::mat3(model)));
-        // Send the inverse-transpose matrix so scaled normals remain correct.
         glUniformMatrix3fv(glGetUniformLocation(p, "normalMatrix"), 1, GL_FALSE,
                            glm::value_ptr(normal));
         // Send the object's base RGB colour to the fragment shader.
@@ -360,7 +342,6 @@ void main(){
         // Match OpenGL's drawing viewport to the resized framebuffer.
         glViewport(0, 0, width, height);
     }
-    // Handles keyboard shortcuts when the control panel is not using the keyboard.
     void key(GLFWwindow *w, int code, int, int action, int)
     {
         if (action != GLFW_PRESS)
@@ -421,8 +402,6 @@ void main(){
 
 int main()
 {
-    // Start GLFW and request an OpenGL 3.3 Core window.
-    // Initialize GLFW; stop immediately if the window system is unavailable.
     if (!glfwInit())
         return EXIT_FAILURE;
     // Request OpenGL major version 3.
@@ -431,7 +410,6 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     // Use only the modern Core Profile API.
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    // Enable forward compatibility, which macOS requires for Core Profile.
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     // Ask for four samples per pixel to smooth jagged edges.
     glfwWindowHint(GLFW_SAMPLES, 4);
@@ -444,15 +422,12 @@ int main()
         glfwTerminate();
         return EXIT_FAILURE;
     }
-    // Make this window's OpenGL context receive all following GL commands.
     glfwMakeContextCurrent(window);
-    // Use vertical synchronization to present at most one frame per refresh.
     glfwSwapInterval(1);
     // Call resize() whenever the framebuffer dimensions change.
     glfwSetFramebufferSizeCallback(window, resize);
     // Call key() whenever GLFW receives a keyboard event.
     glfwSetKeyCallback(window, key);
-    // Read the actual pixel dimensions, including Retina display scaling.
     glfwGetFramebufferSize(window, &width, &height);
     // Define the initial pixel area in which OpenGL may render.
     glViewport(0, 0, width, height);
@@ -469,7 +444,6 @@ int main()
     }
     // Connect Dear ImGui to this window and OpenGL context.
     IMGUI_CHECKVERSION();
-    // Create the global ImGui state used by every control-panel widget.
     ImGui::CreateContext();
     // Access ImGui configuration and frame statistics.
     ImGuiIO &io = ImGui::GetIO();
@@ -486,20 +460,14 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     // Connect ImGui drawing to OpenGL using GLSL version 330.
     ImGui_ImplOpenGL3_Init("#version 330 core");
-    // Create reusable shapes once; transformations make many scene objects from
-    // them.
     Mesh cube = makeCube(), cylinder = makeCylinder(40),
          tower = makeCylinder(48, .42f), cone = makeCylinder(40, .02f),
          sphere = makeSphere(20, 32);
 
-    // Depth testing hides objects that are behind nearer objects.
-    // Enable the depth buffer so nearer surfaces cover farther surfaces.
     glEnable(GL_DEPTH_TEST);
-    // Enable multisample anti-aliasing requested when the window was created.
     glEnable(GL_MULTISAMPLE);
     // Set the sky-blue colour used to erase the previous frame.
     glClearColor(.48f, .73f, .91f, 1);
-    // These constants describe the wheel size and six turbine locations.
     const float wheelRadius = .38f;
     const glm::vec3 turbinePositions[] = {{-15, 0, -11}, {0, 0, -14}, {15, 0, -9}, {-13, 0, 10}, {3, 0, 7}, {17, 0, 13}};
     // Read GLFW's timer to establish the first animation timestamp.
@@ -508,20 +476,13 @@ int main()
                  "| H shadows | L light\n"
               << "Arrows camera | +/- zoom | A axes | R reset | Space pause\n";
 
-    // Main loop: update movement, draw the world, then draw the control panel.
-    // Continue producing frames until the user requests window closure.
     while (!glfwWindowShouldClose(window))
     {
-        // Delta time is the number of seconds since the previous frame.
-        // Multiplying movement by dt keeps animation speed consistent on all PCs.
-        // Read the current time for frame-rate-independent movement.
         double now = glfwGetTime();
         float dt = std::min(static_cast<float>(now - previous), .05f);
         previous = now;
         // Process waiting keyboard, mouse, resize and window events.
         glfwPollEvents();
-        // Begin a new control-panel frame.
-        // Prepare ImGui's OpenGL renderer for the new frame.
         ImGui_ImplOpenGL3_NewFrame();
         // Collect this frame's input and window information from GLFW.
         ImGui_ImplGlfw_NewFrame();
@@ -538,7 +499,6 @@ int main()
             if (state.turbinesMoving)
                 state.bladeDegrees += state.turbineSpeed * dt;
 
-            // Move the vehicle along +X and rotate its wheels by distance/radius.
             if (state.vehicleMoving)
             {
                 state.vehicleX += state.vehicleSpeed * dt;
@@ -550,8 +510,6 @@ int main()
             if (state.cameraMode == 1)
                 state.overviewAngle += .12f * dt;
         }
-        // Allow manual camera movement when the panel is not using the keyboard.
-        // Ask ImGui whether a text field or widget currently owns the keyboard.
         if (!ImGui::GetIO().WantCaptureKeyboard)
         {
             // Holding Left rotates the overview camera counter-clockwise.
@@ -576,14 +534,12 @@ int main()
         state.overviewHeight = std::clamp(state.overviewHeight, 7.0f, 30.0f);
         state.overviewRadius = std::clamp(state.overviewRadius, 24.0f, 58.0f);
 
-        // Sine functions make a smooth route that travels between turbine rows.
         auto dronePoint = [](float p)
         {
             return glm::vec3(18 * std::sin(p), 8.5f + 1.7f * std::sin(2 * p),
                              17 * std::sin(.5f * p));
         };
         glm::vec3 vehiclePosition(state.vehicleX, .25f, 0), camera, targetPoint;
-        // Camera mode 0: the camera moves along the drone route and looks ahead.
         if (state.cameraMode == 0)
         {
             camera = dronePoint(state.droneProgress);
@@ -604,17 +560,12 @@ int main()
             camera = vehiclePosition + glm::vec3(-9, 4.5f, 7);
             targetPoint = vehiclePosition + glm::vec3(5, 1, 0);
         }
-        // Build the interactive control panel in the top-left corner.
-        // Give the panel an initial position without overriding user movement.
         ImGui::SetNextWindowPos(ImVec2(18, 18), ImGuiCond_FirstUseEver);
-        // Give the panel an initial width and automatically calculate its height.
         ImGui::SetNextWindowSize(ImVec2(350, 0), ImGuiCond_FirstUseEver);
-        // Begin adding widgets to an automatically sized control-panel window.
         ImGui::Begin("Wind Farm Control Panel", nullptr,
                      ImGuiWindowFlags_AlwaysAutoResize);
         // Display the green heading at the top of the panel.
         ImGui::TextColored(ImVec4(.45f, .90f, .55f, 1), "REAL-TIME SCENE CONTROLS");
-        // Draw a horizontal line to separate the heading from the controls.
         ImGui::Separator();
         // Create a button whose label and action reflect the pause state.
         if (ImGui::Button(state.paused ? "Resume all" : "Pause all",
@@ -626,8 +577,6 @@ int main()
         if (ImGui::Button("Reset scene", ImVec2(155, 0)))
             state = State{};
 
-        // These controls start, stop and change the speed of each animation.
-        // Create an expandable section for animation controls.
         if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen))
         {
             // Bind this checkbox directly to drone movement.
@@ -645,8 +594,6 @@ int main()
             ImGui::SliderFloat("Vehicle speed", &state.vehicleSpeed, 0, 14,
                                "%.1f units/s");
         }
-        // Choose the active camera and adjust the overview camera.
-        // Create an expandable section for camera controls.
         if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
         {
             const char *modes[] = {"Drone route", "Overview orbit", "Vehicle follow"};
@@ -662,8 +609,6 @@ int main()
                                    "%.1f");
             }
         }
-        // Moving the sun changes the light and shadow direction in real time.
-        // Create an expandable section for light and shadow controls.
         if (ImGui::CollapsingHeader("Lighting and shadows",
                                     ImGuiTreeNodeFlags_DefaultOpen))
         {
@@ -680,8 +625,6 @@ int main()
             // Move the light source across the farm in world space.
             ImGui::SliderFloat("Sun Z", &state.sunPosition.z, -50, 50, "%.1f");
         }
-        // Show values that are useful when explaining the running program.
-        // Create an expandable section for live scene information.
         if (ImGui::CollapsingHeader("Live coordinates",
                                     ImGuiTreeNodeFlags_DefaultOpen))
         {
@@ -706,18 +649,11 @@ int main()
         // Finish the current ImGui window.
         ImGui::End();
 
-        // The view matrix changes world coordinates into camera coordinates.
-        // Aim the selected camera at its target while keeping +Y upright.
         glm::mat4 view = glm::lookAt(camera, targetPoint, {0, 1, 0});
 
-        // Perspective makes nearby objects look larger than distant objects.
-        // Create a 45-degree perspective lens matching the window's aspect ratio.
         glm::mat4 projection = glm::perspective(
             glm::radians(45.0f), static_cast<float>(width) / height, .1f, 140.0f);
 
-        // Clear the previous frame and send shared camera/light values to the
-        // shader.
-        // Erase the old colour image and reset all stored depth values.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // Activate this shader program for all following draw calls.
         glUseProgram(program);
@@ -730,7 +666,6 @@ int main()
         // Send the movable sun position to both shaders.
         glUniform3fv(glGetUniformLocation(program, "lightPosition"), 1,
                      glm::value_ptr(state.sunPosition));
-        // Send the active camera position for specular-light calculations.
         glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1,
                      glm::value_ptr(camera));
         // Set the flat Y level onto which object shadows are projected.
@@ -780,7 +715,6 @@ int main()
                      {.06f, .36f, .09f});
             }
         };
-        // Draw six turbines with towers, nacelles and animated three-blade rotors.
         auto turbines = [&]()
         {
             for (int index = 0; index < 6; ++index)
@@ -792,7 +726,6 @@ int main()
                      trs(p + glm::vec3(0, 10.55f, -.25f), {0, 0, 0},
                          {1.25f, .72f, 2.0f}),
                      {.72f, .75f, .75f});
-                // The rotor matrix makes the hub and all three blades turn together.
                 glm::mat4 rotor =
                     glm::translate(glm::mat4(1), p + glm::vec3(0, 10.55f, -1.32f)) *
                     glm::rotate(glm::mat4(1),
@@ -816,9 +749,7 @@ int main()
                      {1, .08f, .04f}, true);
             }
         };
-        // The parent matrix moves the complete service vehicle along the road.
         glm::mat4 vehicleParent = glm::translate(glm::mat4(1), vehiclePosition);
-        // Draw the vehicle body, cabin, headlights and four rotating wheels.
         auto vehicle = [&]()
         {
             draw(program, cube,
@@ -858,8 +789,6 @@ int main()
                  {0, 0, 1}, true);
         };
 
-        // Render the normal, fully coloured scene.
-        // Draw all static ground and background objects.
         terrain();
         // Draw every animated turbine once in normal colour.
         turbines();
@@ -871,16 +800,11 @@ int main()
         // A bright sphere shows the light source's current position.
         draw(program, sphere, trs(state.sunPosition, {0, 0, 0}, {.82f, .82f, .82f}),
              {1, .70f, .11f}, true);
-        // Redraw moving objects as transparent projections to create shadows.
         if (state.shadows)
         {
-            // Make the shader project geometry onto the ground in dark colour.
             setBool(program, "shadowMode", true);
-            // Enable colour blending so shadows can remain partly transparent.
             glEnable(GL_BLEND);
-            // Mix source alpha with the existing scene colour for soft dark shadows.
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            // Stop shadows writing depth, so one shadow cannot hide another object.
             glDepthMask(GL_FALSE);
             // Redraw turbine geometry as projected shadows.
             turbines();
@@ -888,7 +812,6 @@ int main()
             vehicle();
             // Restore depth writes for normal rendering in the next frame.
             glDepthMask(GL_TRUE);
-            // Turn blending off so later opaque objects do not become transparent.
             glDisable(GL_BLEND);
             // Restore normal shader mode after the shadow pass.
             setBool(program, "shadowMode", false);
@@ -897,7 +820,6 @@ int main()
         ImGui::Render();
         // Draw the ImGui panel over the completed 3D scene.
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        // Present the completed back buffer and begin using the other buffer.
         glfwSwapBuffers(window);
     }
     // Release resources owned by ImGui's OpenGL renderer.

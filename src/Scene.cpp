@@ -1,21 +1,20 @@
-// Project Scene class declaration; implemented in src/Scene.cpp (drawing the farm).
+// Draw the farm.
 #include "windfarm/Scene.hpp"
 
-// Project animation declarations; implemented in src/Animation.cpp (motion and vehicle position).
+// Movement functions.
 #include "windfarm/Animation.hpp"
 
-// GLM translation, rotation, scaling, view, and perspective matrix helpers.
+// Move, rotate, and scale.
 #include <glm/gtc/matrix_transform.hpp>
-// glm::value_ptr exposes matrix/vector data for passing values to OpenGL.
+// Send maths data to OpenGL.
 #include <glm/gtc/type_ptr.hpp>
 
-// Fixed-size arrays for the six turbine positions.
+// Fixed lists.
 #include <array>
 
 namespace windfarm {
 namespace {
 
-// World-space base positions place three turbines on each side of the road.
 constexpr std::array<glm::vec3, 6> kTurbinePositions = {
     glm::vec3{-15.0f, 0.0f, -11.0f}, glm::vec3{0.0f, 0.0f, -14.0f},
     glm::vec3{15.0f, 0.0f, -9.0f},   glm::vec3{-13.0f, 0.0f, 10.0f},
@@ -24,13 +23,11 @@ constexpr std::array<glm::vec3, 6> kTurbinePositions = {
 
 } // namespace
 
-// Create reusable primitive meshes once; each scene object is a transformed instance.
 Scene::Scene()
     : cube_(createCube()), cylinder_(createCylinder(40)),
       tower_(createCylinder(48, 0.42f)), cone_(createCylinder(40, 0.02f)),
       sphere_(createSphere(20, 32)) {}
 
-// Release owned GPU meshes while main.cpp still has a valid OpenGL context.
 Scene::~Scene() {
   destroyMesh(cube_);
   destroyMesh(cylinder_);
@@ -39,8 +36,14 @@ Scene::~Scene() {
   destroyMesh(sphere_);
 }
 
-// Assemble static scenery from scaled primitives; colours use RGB values from zero to one.
 void Scene::drawTerrain(GLuint program) const {
+  drawGround(program);
+  drawMountains(program);
+  drawBuilding(program);
+  drawTrees(program);
+}
+
+void Scene::drawGround(GLuint program) const {
   // Grass field, road and centre markings.
   drawMesh(program, cube_,
            makeTransform({0.0f, -0.25f, 0.0f}, {0.0f, 0.0f, 0.0f},
@@ -58,6 +61,9 @@ void Scene::drawTerrain(GLuint program) const {
   }
 
   // Layered cones form the distant mountain range and snowy peaks.
+}
+
+void Scene::drawMountains(GLuint program) const {
   for (int index = 0; index < 7; ++index) {
     const float x = -32.0f + static_cast<float>(index) * 11.0f;
     const float z = 27.0f + static_cast<float>(index % 2) * 3.0f;
@@ -72,7 +78,9 @@ void Scene::drawTerrain(GLuint program) const {
                            {0.0f, 0.0f, 0.0f}, {2.4f, 3.5f, 2.2f}),
              {0.86f, 0.88f, 0.86f});
   }
+}
 
+void Scene::drawBuilding(GLuint program) const {
   // Farm building and roof.
   drawMesh(program, cube_,
            makeTransform({-27.0f, 2.0f, -23.0f}, {0.0f, 0.0f, 0.0f},
@@ -84,6 +92,9 @@ void Scene::drawTerrain(GLuint program) const {
            {0.24f, 0.16f, 0.10f});
 
   // Cylinders and spheres create rows of trees around the farm.
+}
+
+void Scene::drawTrees(GLuint program) const {
   for (int index = 0; index < 12; ++index) {
     const float x = -34.0f + static_cast<float>(index) * 6.0f;
     const float z = index % 2 == 0 ? 22.0f : -26.0f;
@@ -98,7 +109,6 @@ void Scene::drawTerrain(GLuint program) const {
   }
 }
 
-// Build each turbine at its base position, sharing the animated blade angle.
 void Scene::drawTurbines(GLuint program, const SceneState &state) const {
   for (std::size_t index = 0; index < kTurbinePositions.size(); ++index) {
     const glm::vec3 position = kTurbinePositions[index];
@@ -112,7 +122,6 @@ void Scene::drawTurbines(GLuint program, const SceneState &state) const {
                            {0.0f, 0.0f, 0.0f}, {1.25f, 0.72f, 2.0f}),
              {0.72f, 0.75f, 0.75f});
 
-    // The rotor is the parent transform shared by the hub and three blades.
     const glm::mat4 rotor =
         glm::translate(glm::mat4(1.0f),
                        position + glm::vec3(0.0f, 10.55f, -1.32f)) *
@@ -126,7 +135,6 @@ void Scene::drawTurbines(GLuint program, const SceneState &state) const {
                                    {0.48f, 0.48f, 0.38f}),
              {0.90f, 0.91f, 0.88f});
 
-    // Space three blades 120 degrees apart; each child transform inherits the rotor rotation.
     for (int blade = 0; blade < 3; ++blade) {
       const glm::mat4 bladeParent =
           rotor * glm::rotate(glm::mat4(1.0f),
@@ -148,7 +156,6 @@ void Scene::drawTurbines(GLuint program, const SceneState &state) const {
 }
 
 void Scene::drawVehicle(GLuint program, const SceneState &state) const {
-  // One parent translation moves the complete vehicle along the road.
   const glm::mat4 vehicleParent =
       glm::translate(glm::mat4(1.0f), vehiclePosition(state));
 
@@ -168,8 +175,6 @@ void Scene::drawVehicle(GLuint program, const SceneState &state) const {
                                          {0.08f, 0.22f, 1.0f}),
            {1.0f, 0.90f, 0.45f}, true);
 
-  // Create four wheels from two longitudinal positions and two sides of the vehicle.
-  // Rotate each cylinder onto its axle and apply the animated wheel angle.
   for (float x : {-0.95f, 0.95f}) {
     for (float z : {-0.77f, 0.77f}) {
       const glm::mat4 wheel =
@@ -186,7 +191,6 @@ void Scene::drawVehicle(GLuint program, const SceneState &state) const {
   }
 }
 
-// Draw X in red, Y in green, and Z in blue; emissive colours stay bright without lighting.
 void Scene::drawAxes(GLuint program) const {
   const glm::vec3 origin(-36.0f, 0.2f, -27.0f);
   drawMesh(program, cube_,
@@ -206,7 +210,6 @@ void Scene::drawAxes(GLuint program) const {
 void Scene::render(GLuint program, const SceneState &state,
                    const glm::mat4 &view, const glm::mat4 &projection,
                    const glm::vec3 &cameraPosition) const {
-  // Discard last frame's colours/depth and select the shader program for this frame.
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(program);
 
@@ -239,17 +242,14 @@ void Scene::render(GLuint program, const SceneState &state,
     return;
   }
 
-  // Shadow pass: redraw moving models as transparent ground projections.
   setBoolUniform(program, "shadowMode", true);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  // Keep depth testing but stop shadows writing depth, allowing transparent projections to blend.
   glDepthMask(GL_FALSE);
 
   drawTurbines(program, state);
   drawVehicle(program, state);
 
-  // Restore graphics state so subsequent rendering writes depth normally.
   glDepthMask(GL_TRUE);
   glDisable(GL_BLEND);
   setBoolUniform(program, "shadowMode", false);

@@ -1,16 +1,16 @@
-// Project mesh and drawing declarations; implemented in src/Graphics.cpp.
+// Shapes and drawing.
 #include "windfarm/Graphics.hpp"
 
-// GLM matrix-inverse helpers used when working with normal transforms.
+// Matrix maths.
 #include <glm/gtc/matrix_inverse.hpp>
-// GLM translation, rotation, scaling, view, and perspective matrix helpers.
+// Move, rotate, and scale.
 #include <glm/gtc/matrix_transform.hpp>
-// glm::value_ptr exposes matrix/vector data for passing values to OpenGL.
+// Send maths data to OpenGL.
 #include <glm/gtc/type_ptr.hpp>
 
-// Standard mathematical functions such as sine, cosine, and floating-point remainder.
+// Maths functions.
 #include <cmath>
-// Resizable arrays for generated vertex data and triangle indices.
+// Lists of points and triangles.
 #include <vector>
 
 namespace windfarm {
@@ -18,20 +18,18 @@ namespace {
 
 constexpr float kPi = 3.14159265358979323846f;
 
-// Copies vertex and triangle-index data from CPU memory into GPU buffers.
+// Send a shape to the graphics card.
 Mesh uploadMesh(const std::vector<float> &vertices,
                 const std::vector<unsigned int> &indices) {
   Mesh mesh;
   mesh.indexCount = static_cast<GLsizei>(indices.size());
 
-  // Allocate a vertex-array object (layout), vertex buffer (data), and index buffer (triangles).
   glGenVertexArrays(1, &mesh.vao);
   glGenBuffers(1, &mesh.vbo);
   glGenBuffers(1, &mesh.ebo);
 
   glBindVertexArray(mesh.vao);
 
-  // Upload geometry once; GL_STATIC_DRAW indicates the mesh data is reused without frequent changes.
   glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertices.size() * sizeof(float)),
@@ -55,9 +53,8 @@ Mesh uploadMesh(const std::vector<float> &vertices,
 
 } // namespace
 
+// Make a box.
 Mesh createCube() {
-  // A cube needs separate vertices per face because every face has a different
-  // normal direction. Each group is: position XYZ, normal XYZ.
   const std::vector<float> vertices = {
       -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  0.5f,  -0.5f,
       0.5f,  0.0f,  0.0f,  1.0f,  0.5f,  0.5f,  0.5f,  0.0f,
@@ -84,7 +81,6 @@ Mesh createCube() {
       -1.0f, 0.0f,  -0.5f, -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,
   };
 
-  // Each group of three indices forms a triangle; two triangles cover each cube face.
   const std::vector<unsigned int> indices = {
       0,  1,  2,  2,  3,  0,  4,  5,  6,  6,  7,  4,  8,  9,  10, 10, 11, 8,
       12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20,
@@ -93,11 +89,10 @@ Mesh createCube() {
   return uploadMesh(vertices, indices);
 }
 
-// Build a unit-height cylinder along +Y; a smaller top radius makes a tapered tower or cone.
+// Make a cylinder or tapered tower.
 Mesh createCylinder(int segments, float topRadius) {
   std::vector<float> vertices;
   std::vector<unsigned int> indices;
-  // Tilt side normals to match the change in radius from bottom to top.
   const float slope = 1.0f - topRadius;
 
   // Create pairs of bottom/top vertices around the curved side.
@@ -120,7 +115,6 @@ Mesh createCylinder(int segments, float topRadius) {
                                    first + 3, first + 2});
   }
 
-  // Add one flat circular cap. The direction controls triangle winding.
   auto addCap = [&](float y, float radius, float normalY, bool reverse) {
     const auto centre = static_cast<unsigned int>(vertices.size() / 6);
     vertices.insert(vertices.end(), {0.0f, y, 0.0f, 0.0f, normalY, 0.0f});
@@ -150,7 +144,7 @@ Mesh createCylinder(int segments, float topRadius) {
   return uploadMesh(vertices, indices);
 }
 
-// Sample latitude/longitude rings on a unit sphere; each position is also its outward normal.
+// Make a sphere.
 Mesh createSphere(int stacks, int slices) {
   std::vector<float> vertices;
   std::vector<unsigned int> indices;
@@ -182,7 +176,7 @@ Mesh createSphere(int stacks, int slices) {
   return uploadMesh(vertices, indices);
 }
 
-// Release all GPU objects owned by this mesh and reset its handles.
+// Free the shape memory.
 void destroyMesh(Mesh &mesh) {
   glDeleteVertexArrays(1, &mesh.vao);
   glDeleteBuffers(1, &mesh.vbo);
@@ -190,9 +184,9 @@ void destroyMesh(Mesh &mesh) {
   mesh = {};
 }
 
+// Set size, rotation, and position.
 glm::mat4 makeTransform(glm::vec3 position, glm::vec3 rotationDegrees,
                         glm::vec3 scale) {
-  // Build T * Ry * Rx * Rz * S. With column vectors, scaling acts first and translation last.
   glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
   model = glm::rotate(model, glm::radians(rotationDegrees.y),
                       glm::vec3(0.0f, 1.0f, 0.0f));
@@ -203,18 +197,18 @@ glm::mat4 makeTransform(glm::vec3 position, glm::vec3 rotationDegrees,
   return glm::scale(model, scale);
 }
 
-// Send a named shader boolean as an integer; the target program must already be active.
+// Send an on/off setting to the shader.
 void setBoolUniform(GLuint program, const char *name, bool value) {
   glUniform1i(glGetUniformLocation(program, name), value ? 1 : 0);
 }
 
-// Upload this object's transform/material and draw its indexed triangles using the active program.
+// Draw one shape.
 void drawMesh(GLuint program, const Mesh &mesh, const glm::mat4 &model,
               glm::vec3 colour, bool emissive) {
   glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE,
                      glm::value_ptr(model));
 
-  // Inverse-transpose keeps normals correct after non-uniform scaling.
+  // Keep lighting correct when stretching shapes.
   const glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
   glUniformMatrix3fv(glGetUniformLocation(program, "normalMatrix"), 1, GL_FALSE,
                      glm::value_ptr(normalMatrix));
@@ -222,7 +216,6 @@ void drawMesh(GLuint program, const Mesh &mesh, const glm::mat4 &model,
                glm::value_ptr(colour));
   setBoolUniform(program, "emissive", emissive);
 
-  // Restore this mesh's vertex layout and index buffer, then issue the GPU draw call.
   glBindVertexArray(mesh.vao);
   glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, nullptr);
 }

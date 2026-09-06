@@ -1,57 +1,53 @@
-# Wind Turbine Farm - Code Structure
+# Simple branch code guide
 
-The original 907-line program has been separated by responsibility. Start with
-`src/main.cpp`; it now reads like a short map of the complete application.
-
-## Recommended demonstration order
-
-1. `src/main.cpp` - application setup and the frame loop.
-2. `include/windfarm/AppState.hpp` - every value that changes at runtime.
-3. `src/Animation.cpp` - turbine, drone, vehicle and wheel motion.
-4. `src/Camera.cpp` - drone, overview and vehicle-follow cameras.
-5. `src/Scene.cpp` - terrain, turbines, vehicle, axes, sun and shadows.
-6. `src/Graphics.cpp` - primitive meshes, TRS matrices and draw calls.
-7. `src/ShaderProgram.cpp` - vertex transformation and pixel lighting.
-8. `src/ControlPanel.cpp` - Dear ImGui controls and live coordinates.
-9. `src/Input.cpp` - keyboard shortcuts and window resizing.
-
-## Modules
-
-| Module | Purpose |
-|---|---|
-| `AppState.hpp` | Scene settings, animation values and window size |
-| `Animation` | Frame-rate-independent motion |
-| `Camera` | Eye and target calculation for three camera modes |
-| `Graphics` | Mesh creation, GPU buffers, transforms and drawing |
-| `ShaderProgram` | GLSL shader source, compilation and linking |
-| `Scene` | Wind-farm model construction and two rendering passes |
-| `ControlPanel` | Dear ImGui initialization, widgets and rendering |
-| `Input` | GLFW callbacks and held-key camera controls |
-| `main.cpp` | High-level initialize -> update -> render -> cleanup flow |
-
-## Frame flow
+Start with `src/main.cpp`. It has three steps:
 
 ```text
-Poll input
-    -> begin the control-panel frame
-    -> update animation using delta time
-    -> calculate vehicle and camera positions
-    -> build UI controls
-    -> construct View and Projection matrices
-    -> render the 3D scene and shadows
-    -> render the UI
-    -> swap buffers
+initialize() -> run() -> shutdown()
 ```
 
-## Important theory locations
+If setup fails, the program cleans up and exits.
 
-- Translation, rotation and scaling: `Graphics.cpp::makeTransform`
-- Hierarchical blade rotation: `Scene.cpp::drawTurbines`
-- Vehicle translation and wheel rotation: `Animation.cpp` and
-  `Scene.cpp::drawVehicle`
-- Camera eye, target and route: `Camera.cpp`
-- Model-View-Projection pipeline: vertex shader in `ShaderProgram.cpp`
-- Diffuse/specular lighting: fragment shader in `ShaderProgram.cpp`
-- Z-buffer and multisampling: OpenGL setup in `main.cpp`
-- Planar shadows: shadow projection in `ShaderProgram.cpp` and shadow pass in
-  `Scene.cpp::render`
+## Where to look
+
+| File | What it does |
+|---|---|
+| `src/main.cpp` | Starts and stops the app |
+| `src/Application.cpp` | Opens the window and runs each frame |
+| `include/windfarm/AppState.hpp` | Holds settings, positions, and speeds |
+| `src/Animation.cpp` | Moves the drone, blades, and vehicle |
+| `src/Camera.cpp` | Chooses where the camera looks |
+| `src/Input.cpp` | Handles keys and window resizing |
+| `src/ControlPanel.cpp` | Builds the buttons and sliders |
+| `src/Scene.cpp` | Draws the farm and shadows |
+| `src/Graphics.cpp` | Makes and draws basic shapes |
+| `src/ShaderProgram.cpp` | Runs the graphics card's drawing code |
+| `CMakeLists.txt` | Builds the program and connects libraries |
+
+Headers in `include/windfarm/` list the functions and classes.
+Their matching `.cpp` files contain the code.
+The old version is in `legacy/`; it is not part of the build.
+
+## One frame
+
+1. Read keyboard and window events.
+2. Start the control panel frame.
+3. Update movement.
+4. Find the vehicle and camera positions.
+5. Build the controls.
+6. Set the camera view.
+7. Draw the farm and shadows.
+8. Draw the controls and show the picture.
+
+`Application::drawFrame()` handles steps 4 to 8.
+The scene releases its shapes before the window closes.
+
+## Smaller sections
+
+`Scene::drawTerrain()` calls `drawGround()`, `drawMountains()`,
+`drawBuilding()`, and `drawTrees()`.
+
+The control panel has separate functions for animation, camera,
+lighting, and live coordinates.
+
+The movement maths, colours, controls, and drawing order are unchanged.

@@ -1,24 +1,21 @@
-// Project shader declaration; implemented in src/ShaderProgram.cpp (GPU program creation).
+// Create the shaders.
 #include "windfarm/ShaderProgram.hpp"
 
-// Standard console output streams for instructions and error messages.
+// Console messages.
 #include <iostream>
-// String storage for shader compiler and linker diagnostic messages.
+// Text storage.
 #include <string>
 
 namespace windfarm {
 namespace {
 
-// Vertex shader: transforms vertices and optionally projects them onto the
-// ground to create the planar-shadow pass.
+// Move points onto the screen.
 constexpr const char *kVertexShader = R"GLSL(
 #version 330 core
 
-// Vertex attributes match the position/normal layout configured in Graphics.cpp.
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec3 aNormal;
 
-// Uniforms are supplied by CPU draw code and shared by vertices in each draw call.
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
@@ -27,20 +24,16 @@ uniform vec3 lightPosition;
 uniform float shadowPlaneY;
 uniform bool shadowMode;
 
-// Pass world-space position and normal to the fragment shader through interpolation.
 out vec3 worldPosition;
 out vec3 normal;
 
 void main() {
-    // Transform this vertex from its local object space into world space.
     vec4 position = model * vec4(aPosition, 1.0);
 
     if (shadowMode) {
-        // Intersect the line from the sun through this vertex with the ground.
         float t = (shadowPlaneY - lightPosition.y) /
                   (position.y - lightPosition.y);
         position.xyz = lightPosition + t * (position.xyz - lightPosition);
-        // Lift the projected shadow slightly to reduce depth fighting with the ground.
         position.y += 0.018;
     }
 
@@ -53,6 +46,7 @@ void main() {
 )GLSL";
 
 // Fragment shader: calculates each visible pixel's colour.
+// Choose each pixel colour.
 constexpr const char *kFragmentShader = R"GLSL(
 #version 330 core
 
@@ -74,7 +68,6 @@ void main() {
         return;
     }
 
-    // Emissive objects and the unlit mode use the original material colour directly.
     if (emissive || !lightingEnabled) {
         color = vec4(objectColor, 1.0);
         return;
@@ -86,16 +79,13 @@ void main() {
     vec3 V = normalize(cameraPosition - worldPosition);
     vec3 H = normalize(L + V);
 
-    // Diffuse brightness depends on facing the light; Blinn-Phong specular adds a tight highlight.
     float diffuse = max(dot(N, L), 0.0);
     float specular = pow(max(dot(N, H), 0.0), 44.0);
     float distanceFromLight = length(lightPosition - worldPosition);
-    // Reduce light contribution as the distance from the sun position increases.
     float attenuation = 1.0 /
         (1.0 + 0.01 * distanceFromLight +
          0.0006 * distanceFromLight * distanceFromLight);
 
-    // Combine constant ambient light with distance-attenuated diffuse and specular terms.
     vec3 ambientPart = 0.24 * objectColor;
     vec3 diffusePart = 0.94 * diffuse * objectColor;
     vec3 specularPart = vec3(0.52) * specular;
@@ -105,6 +95,7 @@ void main() {
 )GLSL";
 
 // Read and print the driver's compilation or linking diagnostics.
+// Show shader errors.
 void printShaderLog(GLuint object, bool isProgram) {
   GLint length = 0;
   if (isProgram) {
@@ -126,7 +117,7 @@ void printShaderLog(GLuint object, bool isProgram) {
   std::cerr << log << '\n';
 }
 
-// Compile one GLSL stage; report errors and return zero if the driver rejects it.
+// Prepare one shader.
 GLuint compileShader(GLenum type, const char *source) {
   GLuint shader = glCreateShader(type);
   glShaderSource(shader, 1, &source, nullptr);
@@ -144,7 +135,7 @@ GLuint compileShader(GLenum type, const char *source) {
 
 } // namespace
 
-// Compile both shader stages, link them, and return a program handle for drawing.
+// Join the two shaders.
 GLuint createShaderProgram() {
   GLuint vertexShader = compileShader(GL_VERTEX_SHADER, kVertexShader);
   GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, kFragmentShader);
@@ -160,13 +151,11 @@ GLuint createShaderProgram() {
     return 0;
   }
 
-  // Link vertex and fragment stages into one executable GPU pipeline.
   GLuint program = glCreateProgram();
   glAttachShader(program, vertexShader);
   glAttachShader(program, fragmentShader);
   glLinkProgram(program);
 
-  // The linked program owns the compiled code, so these objects are finished.
   glDeleteShader(vertexShader);
   glDeleteShader(fragmentShader);
 
