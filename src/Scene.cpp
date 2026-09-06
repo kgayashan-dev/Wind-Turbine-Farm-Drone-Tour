@@ -244,10 +244,10 @@ void Scene::render(GLuint program, const SceneState &state,
     return;
   }
 
-  setBoolUniform(program, "shadowMode", true);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glDepthMask(GL_FALSE);
+  setBoolUniform(program, "shadowMode", true); // Draw the shadows of the turbines and vehicle on the ground.
+  glEnable(GL_BLEND); // Blend the shadows with the ground.
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Blend the shadows with the ground.
+  glDepthMask(GL_FALSE); // Don't write to the depth buffer when drawing shadows, so that the shadows don't hide other objects.
 
   // Draw the tree shadows too.
   drawTrees(program);
