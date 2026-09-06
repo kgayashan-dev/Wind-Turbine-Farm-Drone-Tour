@@ -1,9 +1,5 @@
-// main.cpp intentionally contains only the high-level application flow.
+// main.cpp contains the high-level application flow.
 
-
-// Project animation declarations; implemented in src/Animation.cpp (motion and vehicle position).
-// These local headers declare the separated functions/classes used below.
-// CMake compiles their .cpp implementations and links them into this executable.
 // The include/ directory is the search root, so "windfarm/..." resolves there.
 #include "windfarm/Animation.hpp"
 // Project camera declarations; implemented in src/Camera.cpp (camera position and target).
