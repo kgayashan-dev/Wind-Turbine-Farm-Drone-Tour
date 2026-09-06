@@ -64,7 +64,7 @@ void Scene::drawGround(GLuint program) const {
 }
 
 void Scene::drawMountains(GLuint program) const {
-  for (int index = 0; index < 7; ++index) {
+  for (int index = 0; index < 7; ++index) { // Draw the mountains.
     const float x = -32.0f + static_cast<float>(index) * 11.0f;
     const float z = 27.0f + static_cast<float>(index % 2) * 3.0f;
     drawMesh(program, cone_,
@@ -80,7 +80,7 @@ void Scene::drawMountains(GLuint program) const {
   }
 }
 
-void Scene::drawBuilding(GLuint program) const {
+void Scene::drawBuilding(GLuint program) const { // building and roof.
   // Farm building and roof.
   drawMesh(program, cube_,
            makeTransform({-27.0f, 2.0f, -23.0f}, {0.0f, 0.0f, 0.0f},
@@ -247,6 +247,8 @@ void Scene::render(GLuint program, const SceneState &state,
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDepthMask(GL_FALSE);
 
+  // Draw the tree shadows too.
+  drawTrees(program);
   drawTurbines(program, state);
   drawVehicle(program, state);
 
