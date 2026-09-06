@@ -1,23 +1,38 @@
 // OpenGL draws the 3D graphics. GLFW creates the window and reads input.
+// OpenGL types and functions for GPU resources, rendering, and graphics state.
 #include <OpenGL/gl3.h>
+// Prevent GLFW from including another OpenGL header; choose the graphics API explicitly.
 #define GLFW_INCLUDE_NONE
+// GLFW functions for windows, OpenGL contexts, timing, and keyboard/window events.
 #include <GLFW/glfw3.h>
 
 // Dear ImGui creates the control panel shown over the 3D scene.
+// Dear ImGui widgets, UI state, styling, and frame management.
 #include <imgui.h>
+// Connects Dear ImGui to GLFW input and window events.
 #include <imgui_impl_glfw.h>
+// Renders Dear ImGui draw data using OpenGL 3.
 #include <imgui_impl_opengl3.h>
 
 // GLM provides vectors and transformation matrices.
+// GLM vector and matrix types used for positions, directions, and transforms.
 #include <glm/glm.hpp>
+// GLM translation, rotation, scaling, view, and perspective matrix helpers.
 #include <glm/gtc/matrix_transform.hpp>
+// glm::value_ptr exposes matrix/vector data for passing values to OpenGL.
 #include <glm/gtc/type_ptr.hpp>
 
+// Standard minimum, maximum, and clamp helpers for limiting numeric values.
 #include <algorithm>
+// Standard mathematical functions such as sine, cosine, and floating-point remainder.
 #include <cmath>
+// Standard exit status constants, including EXIT_SUCCESS and EXIT_FAILURE.
 #include <cstdlib>
+// Standard console output streams for instructions and error messages.
 #include <iostream>
+// String storage for shader compiler and linker diagnostic messages.
 #include <string>
+// Resizable arrays for generated vertex data and triangle indices.
 #include <vector>
 
 namespace

@@ -1,5 +1,7 @@
+// Project camera declarations; implemented in src/Camera.cpp (camera position and target).
 #include "windfarm/Camera.hpp"
 
+// Standard mathematical functions such as sine, cosine, and floating-point remainder.
 #include <cmath>
 
 namespace windfarm {
@@ -10,6 +12,7 @@ glm::vec3 dronePoint(float progress) {
           17.0f * std::sin(0.5f * progress)};
 }
 
+// Return an eye/target pair; main.cpp converts these into a view matrix.
 CameraFrame calculateCamera(const SceneState &state,
                             const glm::vec3 &currentVehiclePosition) {
   if (state.cameraMode == 0) {

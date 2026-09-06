@@ -1,7 +1,10 @@
+// Include this header only once per compilation unit to avoid duplicate definitions.
 #pragma once
 
+// Shared scene and window data definitions; defaults are defined directly in this header.
 #include "windfarm/AppState.hpp"
 
+// GLM vector and matrix types used for positions, directions, and transforms.
 #include <glm/glm.hpp>
 
 namespace windfarm {

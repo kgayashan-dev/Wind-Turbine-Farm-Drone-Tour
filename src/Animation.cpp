@@ -1,10 +1,14 @@
+// Project animation declarations; implemented in src/Animation.cpp (motion and vehicle position).
 #include "windfarm/Animation.hpp"
 
+// GLM angle helpers, including conversion from radians to degrees.
 #include <glm/trigonometric.hpp>
 
 namespace windfarm {
 
+// Update state in place; deltaTime is elapsed time in seconds.
 void updateAnimation(SceneState &state, float deltaTime) {
+  // Pausing skips all automatic motion, including the overview orbit.
   if (state.paused) {
     return;
   }
@@ -37,6 +41,7 @@ void updateAnimation(SceneState &state, float deltaTime) {
   }
 }
 
+// Keep vehicle height and road centre fixed while its X coordinate changes.
 glm::vec3 vehiclePosition(const SceneState &state) {
   return {state.vehicleX, 0.25f, 0.0f};
 }

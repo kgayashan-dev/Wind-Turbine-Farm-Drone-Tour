@@ -1,10 +1,16 @@
+// Project mesh and drawing declarations; implemented in src/Graphics.cpp.
 #include "windfarm/Graphics.hpp"
 
+// GLM matrix-inverse helpers used when working with normal transforms.
 #include <glm/gtc/matrix_inverse.hpp>
+// GLM translation, rotation, scaling, view, and perspective matrix helpers.
 #include <glm/gtc/matrix_transform.hpp>
+// glm::value_ptr exposes matrix/vector data for passing values to OpenGL.
 #include <glm/gtc/type_ptr.hpp>
 
+// Standard mathematical functions such as sine, cosine, and floating-point remainder.
 #include <cmath>
+// Resizable arrays for generated vertex data and triangle indices.
 #include <vector>
 
 namespace windfarm {
@@ -18,12 +24,14 @@ Mesh uploadMesh(const std::vector<float> &vertices,
   Mesh mesh;
   mesh.indexCount = static_cast<GLsizei>(indices.size());
 
+  // Allocate a vertex-array object (layout), vertex buffer (data), and index buffer (triangles).
   glGenVertexArrays(1, &mesh.vao);
   glGenBuffers(1, &mesh.vbo);
   glGenBuffers(1, &mesh.ebo);
 
   glBindVertexArray(mesh.vao);
 
+  // Upload geometry once; GL_STATIC_DRAW indicates the mesh data is reused without frequent changes.
   glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertices.size() * sizeof(float)),
@@ -76,6 +84,7 @@ Mesh createCube() {
       -1.0f, 0.0f,  -0.5f, -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,
   };
 
+  // Each group of three indices forms a triangle; two triangles cover each cube face.
   const std::vector<unsigned int> indices = {
       0,  1,  2,  2,  3,  0,  4,  5,  6,  6,  7,  4,  8,  9,  10, 10, 11, 8,
       12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20,
@@ -84,9 +93,11 @@ Mesh createCube() {
   return uploadMesh(vertices, indices);
 }
 
+// Build a unit-height cylinder along +Y; a smaller top radius makes a tapered tower or cone.
 Mesh createCylinder(int segments, float topRadius) {
   std::vector<float> vertices;
   std::vector<unsigned int> indices;
+  // Tilt side normals to match the change in radius from bottom to top.
   const float slope = 1.0f - topRadius;
 
   // Create pairs of bottom/top vertices around the curved side.
@@ -139,6 +150,7 @@ Mesh createCylinder(int segments, float topRadius) {
   return uploadMesh(vertices, indices);
 }
 
+// Sample latitude/longitude rings on a unit sphere; each position is also its outward normal.
 Mesh createSphere(int stacks, int slices) {
   std::vector<float> vertices;
   std::vector<unsigned int> indices;
@@ -156,6 +168,7 @@ Mesh createSphere(int stacks, int slices) {
     }
   }
 
+  // Join adjacent rings with two triangles per grid cell.
   for (int stack = 0; stack < stacks; ++stack) {
     for (int slice = 0; slice < slices; ++slice) {
       const unsigned int first =
@@ -169,6 +182,7 @@ Mesh createSphere(int stacks, int slices) {
   return uploadMesh(vertices, indices);
 }
 
+// Release all GPU objects owned by this mesh and reset its handles.
 void destroyMesh(Mesh &mesh) {
   glDeleteVertexArrays(1, &mesh.vao);
   glDeleteBuffers(1, &mesh.vbo);
@@ -178,6 +192,7 @@ void destroyMesh(Mesh &mesh) {
 
 glm::mat4 makeTransform(glm::vec3 position, glm::vec3 rotationDegrees,
                         glm::vec3 scale) {
+  // Build T * Ry * Rx * Rz * S. With column vectors, scaling acts first and translation last.
   glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
   model = glm::rotate(model, glm::radians(rotationDegrees.y),
                       glm::vec3(0.0f, 1.0f, 0.0f));
@@ -188,10 +203,12 @@ glm::mat4 makeTransform(glm::vec3 position, glm::vec3 rotationDegrees,
   return glm::scale(model, scale);
 }
 
+// Send a named shader boolean as an integer; the target program must already be active.
 void setBoolUniform(GLuint program, const char *name, bool value) {
   glUniform1i(glGetUniformLocation(program, name), value ? 1 : 0);
 }
 
+// Upload this object's transform/material and draw its indexed triangles using the active program.
 void drawMesh(GLuint program, const Mesh &mesh, const glm::mat4 &model,
               glm::vec3 colour, bool emissive) {
   glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE,
@@ -205,6 +222,7 @@ void drawMesh(GLuint program, const Mesh &mesh, const glm::mat4 &model,
                glm::value_ptr(colour));
   setBoolUniform(program, "emissive", emissive);
 
+  // Restore this mesh's vertex layout and index buffer, then issue the GPU draw call.
   glBindVertexArray(mesh.vao);
   glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, nullptr);
 }

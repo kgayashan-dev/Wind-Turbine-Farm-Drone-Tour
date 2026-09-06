@@ -1,5 +1,7 @@
+// Include this header only once per compilation unit to avoid duplicate definitions.
 #pragma once
 
+// OpenGL types and functions for GPU resources, rendering, and graphics state.
 #include <OpenGL/gl3.h>
 
 namespace windfarm {

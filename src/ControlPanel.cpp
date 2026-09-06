@@ -1,15 +1,23 @@
+// Project UI declarations; implemented in src/ControlPanel.cpp (Dear ImGui controls).
 #include "windfarm/ControlPanel.hpp"
 
+// Prevent GLFW from including another OpenGL header; choose the graphics API explicitly.
 #define GLFW_INCLUDE_NONE
+// GLFW functions for windows, OpenGL contexts, timing, and keyboard/window events.
 #include <GLFW/glfw3.h>
+// Dear ImGui widgets, UI state, styling, and frame management.
 #include <imgui.h>
+// Connects Dear ImGui to GLFW input and window events.
 #include <imgui_impl_glfw.h>
+// Renders Dear ImGui draw data using OpenGL 3.
 #include <imgui_impl_opengl3.h>
 
+// Standard mathematical functions such as sine, cosine, and floating-point remainder.
 #include <cmath>
 
 namespace windfarm {
 
+// Create the UI context, configure its style, and connect its input/rendering backends.
 bool initializeControlPanel(GLFWwindow *window) {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -22,6 +30,8 @@ bool initializeControlPanel(GLFWwindow *window) {
   style.GrabRounding = 5.0f;
   style.WindowBorderSize = 1.0f;
 
+  // Install ImGui callbacks while chaining the application callbacks registered earlier.
+  // If a backend fails, undo the initialization steps already completed.
   if (!ImGui_ImplGlfw_InitForOpenGL(window, true)) {
     ImGui::DestroyContext();
     return false;
@@ -34,12 +44,14 @@ bool initializeControlPanel(GLFWwindow *window) {
   return true;
 }
 
+// Refresh backend state before recording this frame's widgets.
 void beginControlPanelFrame() {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 }
 
+// Build the panel each frame; widget pointers let ImGui edit SceneState directly.
 void drawControlPanel(SceneState &state, const glm::vec3 &cameraPosition,
                       const glm::vec3 &currentVehiclePosition) {
   ImGui::SetNextWindowPos(ImVec2(18.0f, 18.0f), ImGuiCond_FirstUseEver);
@@ -51,6 +63,7 @@ void drawControlPanel(SceneState &state, const glm::vec3 &cameraPosition,
                      "REAL-TIME SCENE CONTROLS");
   ImGui::Separator();
 
+  // Button calls return true when activated, triggering pause or a reset to defaults.
   if (ImGui::Button(state.paused ? "Resume all" : "Pause all",
                     ImVec2(155.0f, 0.0f))) {
     state.paused = !state.paused;
@@ -60,6 +73,7 @@ void drawControlPanel(SceneState &state, const glm::vec3 &cameraPosition,
     state = SceneState{};
   }
 
+  // Group movement toggles and speed sliders inside an expandable section.
   if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen)) {
     ImGui::Checkbox("Drone movement", &state.droneMoving);
     ImGui::SliderFloat("Drone speed", &state.droneSpeed, 0.03f, 0.65f, "%.2f");
@@ -71,6 +85,7 @@ void drawControlPanel(SceneState &state, const glm::vec3 &cameraPosition,
                        "%.1f units/s");
   }
 
+  // Choose one of three camera modes; orbit controls appear only for overview mode.
   if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
     const char *modes[] = {"Drone route", "Overview orbit", "Vehicle follow"};
     ImGui::Combo("Camera mode", &state.cameraMode, modes, 3);
@@ -82,6 +97,7 @@ void drawControlPanel(SceneState &state, const glm::vec3 &cameraPosition,
     }
   }
 
+  // Edit rendering switches and the world-space light position.
   if (ImGui::CollapsingHeader("Lighting and shadows",
                               ImGuiTreeNodeFlags_DefaultOpen)) {
     ImGui::Checkbox("Enable lighting", &state.lighting);
@@ -93,6 +109,7 @@ void drawControlPanel(SceneState &state, const glm::vec3 &cameraPosition,
     ImGui::SliderFloat("Sun Z", &state.sunPosition.z, -50.0f, 50.0f, "%.1f");
   }
 
+  // Display coordinates, the blade angle wrapped to one revolution, and measured frame rate.
   if (ImGui::CollapsingHeader("Live coordinates",
                               ImGuiTreeNodeFlags_DefaultOpen)) {
     ImGui::Text("Camera  X:%6.1f  Y:%5.1f  Z:%6.1f", cameraPosition.x,
@@ -110,11 +127,13 @@ void drawControlPanel(SceneState &state, const glm::vec3 &cameraPosition,
   ImGui::End();
 }
 
+// Finalize widget draw commands and submit them after the 3D scene.
 void renderControlPanel() {
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
+// Release renderer/input backends before destroying the UI context.
 void shutdownControlPanel() {
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();

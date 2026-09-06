@@ -9,13 +9,15 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/.deps" CACHE PATH
     "Local dependencies" FORCE)
 
+# FetchContent downloads dependency source when a configured library needs it.
 include(FetchContent)
 
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE) # Disable GLFW documentation generation.
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 
+# Use an installed GLFW package when available; otherwise fetch the specified version.
 find_package(glfw3 3.3 QUIET)
 if(NOT TARGET glfw)
   FetchContent_Declare(
@@ -27,6 +29,7 @@ if(NOT TARGET glfw)
   FetchContent_MakeAvailable(glfw)
 endif()
 
+# Use installed GLM headers when available; otherwise fetch the specified version.
 find_package(glm QUIET)
 if(NOT TARGET glm::glm)
   FetchContent_Declare(
@@ -48,6 +51,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(imgui)
 
+# Compile the UI library and its GLFW/OpenGL adapters into a static library.
 add_library(imgui STATIC
   ${imgui_SOURCE_DIR}/imgui.cpp
   ${imgui_SOURCE_DIR}/imgui_draw.cpp
@@ -62,20 +66,24 @@ target_include_directories(imgui PUBLIC
 )
 target_link_libraries(imgui PUBLIC glfw OpenGL::GL)
 
-add_executable(wind_turbine_farm
-  src/main.cpp
-  src/Animation.cpp
-  src/Camera.cpp
-  src/ControlPanel.cpp
-  src/Graphics.cpp
-  src/Input.cpp
-  src/Scene.cpp
-  src/ShaderProgram.cpp
-)
+# Compile main and every separated implementation, then link them into one executable.
+# Header includes provide declarations; these source files provide the function bodies.
+# add_executable(wind_turbine_farm
+#   src/main.cpp
+#   src/Animation.cpp
+#   src/Camera.cpp
+#   src/ControlPanel.cpp
+#   src/Graphics.cpp
+#   src/Input.cpp
+#   src/Scene.cpp
+#   src/ShaderProgram.cpp
+# )
 
+# Add include/ to the header search path so #include "windfarm/Animation.hpp" resolves.
 target_include_directories(wind_turbine_farm PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+# Connect the executable to its graphics, window, math, and UI dependencies.
 target_link_libraries(wind_turbine_farm PRIVATE
   OpenGL::GL
   glfw
