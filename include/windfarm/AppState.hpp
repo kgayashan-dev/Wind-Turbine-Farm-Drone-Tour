@@ -9,19 +9,19 @@ namespace windfarm {
 // All values that can change while the program is running.
 struct SceneState {
   // Movement and display switches.
-  bool paused = false;
-  bool droneMoving = true;
-  bool turbinesMoving = true;
-  bool vehicleMoving = true;
-  bool shadows = true;
-  bool lighting = true;
+  bool paused = false;// Whether to pause all movement.
+  bool droneMoving = true;// Whether to move the drone, turbines, and vehicle.
+  bool turbinesMoving = true;// Whether to move the turbines.
+  bool vehicleMoving = true;// Whether to move the drone, turbines, and vehicle.
+  bool shadows = true; // Whether to draw shadows.
+  bool lighting = true; // Whether to use lighting.
   bool axes = true;
 
   // 0 = drone route, 1 = overview orbit, 2 = vehicle follow.
   int cameraMode = 0;
 
   // Positions and angles.
-  float droneProgress = 0.3f;
+  float droneProgress = 0.3f; // How far along the drone route the drone is, from 0.0 to 1.0.
   float overviewAngle = 0.65f;
   float overviewRadius = 42.0f;
   float overviewHeight = 19.0f;

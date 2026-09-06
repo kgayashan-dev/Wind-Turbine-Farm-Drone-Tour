@@ -18,6 +18,7 @@
 namespace windfarm {
 namespace {
 
+  // Show the animation controls.
 void drawAnimationControls(SceneState &state) {
   if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen)) {
     ImGui::Checkbox("Drone movement", &state.droneMoving);
@@ -30,9 +31,10 @@ void drawAnimationControls(SceneState &state) {
                        "%.1f units/s");
   }
 }
-
+// Show the camera mode and orbit parameters.
 void drawCameraControls(SceneState &state) {
   if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
+    // select camera mode
     const char *modes[] = {"Drone route", "Overview orbit", "Vehicle follow"};
     ImGui::Combo("Camera mode", &state.cameraMode, modes, 3);
     if (state.cameraMode == 1) {
@@ -44,6 +46,7 @@ void drawCameraControls(SceneState &state) {
   }
 }
 
+// Edit the world-space light position and whether to use lighting and shadows.
 void drawLightingControls(SceneState &state) {
   if (ImGui::CollapsingHeader("Lighting and shadows",
                               ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -57,10 +60,11 @@ void drawLightingControls(SceneState &state) {
   }
 }
 
+// Show the camera and vehicle positions, the blade angle, and the frame rate.
 void drawLiveCoordinates(const SceneState &state, const glm::vec3 &cameraPosition,
                          const glm::vec3 &currentVehiclePosition) {
   if (ImGui::CollapsingHeader("Live coordinates",
-                              ImGuiTreeNodeFlags_DefaultOpen)) {
+                              ImGuiTreeNodeFlags_DefaultOpen)) { // Show the camera and vehicle positions, the blade angle, and the frame rate.
     ImGui::Text("Camera  X:%6.1f  Y:%5.1f  Z:%6.1f", cameraPosition.x,
                 cameraPosition.y, cameraPosition.z);
     ImGui::Text("Vehicle X:%6.1f  Y:%5.1f  Z:%6.1f", currentVehiclePosition.x,
@@ -139,7 +143,7 @@ void drawControlPanel(SceneState &state, const glm::vec3 &cameraPosition,
   ImGui::TextDisabled("MVP: clip = Projection x View x Model x vertex");
   ImGui::End();
 }
-
+// Render the control panel's widgets to the screen.
 void renderControlPanel() {
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

@@ -122,10 +122,10 @@ void Application::run() {
     previousTime = currentTime;
 
     // Read input and update movement.
-    glfwPollEvents();
-    beginControlPanelFrame();
+    glfwPollEvents(); 
+    beginControlPanelFrame(); // Start a new frame for the control panel.
 
-    updateAnimation(state, deltaTime);
+    updateAnimation(state, deltaTime); 
     processContinuousInput(window, state, deltaTime);
 
     drawFrame(scene);

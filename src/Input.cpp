@@ -47,6 +47,8 @@ void keyCallback(GLFWwindow *window, int key, int, int action, int) {
   }
   SceneState &state = *context->scene;
 
+
+  // Handle the key press.
   switch (key) {
   case GLFW_KEY_ESCAPE:
     glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -55,7 +57,7 @@ void keyCallback(GLFWwindow *window, int key, int, int action, int) {
     state.paused = !state.paused;
     break;
   case GLFW_KEY_C:
-    state.cameraMode = (state.cameraMode + 1) % 3;
+    state.cameraMode = (state.cameraMode + 1) % 3; // Cycle through the three camera modes.
     break;
   case GLFW_KEY_D:
     state.droneMoving = !state.droneMoving;
@@ -99,15 +101,20 @@ void processContinuousInput(GLFWwindow *window, SceneState &state,
     return;
   }
 
+  // Move the overview camera with the arrow keys and zoom with + and -.
   if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
     state.overviewAngle -= 0.85f * deltaTime;
   }
+  // Move the overview camera with the arrow keys and zoom with + and -.
   if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
     state.overviewAngle += 0.85f * deltaTime;
   }
+
+  // Move the overview camera with the arrow keys and zoom with + and -.
   if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
     state.overviewHeight += 7.0f * deltaTime;
   }
+  // Move the overview camera with the arrow keys and zoom with + and -.
   if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
     state.overviewHeight -= 7.0f * deltaTime;
   }

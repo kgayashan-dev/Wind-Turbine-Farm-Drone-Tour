@@ -13,7 +13,7 @@ namespace {
 constexpr const char *kVertexShader = R"GLSL(
 #version 330 core
 
-# Vertex shader: moves each vertex to its position on the screen.
+// Move each point onto the screen.
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec3 aNormal;
 
@@ -50,50 +50,64 @@ void main() {
 }
 )GLSL";
 
-// Fragment shader: calculates each visible pixel's colour.
-// Choose each pixel colour.
-constexpr const char *kFragmentShader = R"GLSL( // Fragment shader: calculates each visible pixel's colour.
+// Store the pixel shader as text.
+constexpr const char *kFragmentShader = R"GLSL(
 #version 330 core
 
-in vec3 worldPosition;
-in vec3 normal;
+// Values from the vertex shader.
+in vec3 worldPosition; // Surface position.
+in vec3 normal;        // Surface direction.
 
-uniform vec3 objectColor;
-uniform vec3 lightPosition;
-uniform vec3 cameraPosition;
-uniform bool lightingEnabled;
-uniform bool shadowMode;
-uniform bool emissive;
+// Settings sent by the C++ code.
+uniform vec3 objectColor;    // Base colour.
+uniform vec3 lightPosition;  // Sun position.
+uniform vec3 cameraPosition; // Camera position.
+uniform bool lightingEnabled; // Use lighting.
+uniform bool shadowMode;      // Draw a shadow.
+uniform bool emissive;        // Keep the object bright.
 
+// Final red, green, blue, and opacity.
 out vec4 color;
 
 void main() {
+    // Shadows are dark and partly see-through.
     if (shadowMode) {
-        color = vec4(0.022, 0.025, 0.030, 0.48);
-        return;
+        color = vec4(0.022, 0.025, 0.030, 0.48); // 48% opacity.
+        return; // Skip the lighting maths.
     }
 
+    // Use the base colour if lighting is not needed.
     if (emissive || !lightingEnabled) {
-        color = vec4(objectColor, 1.0);
+        color = vec4(objectColor, 1.0); // Fully solid.
         return;
     }
 
-    // N, L, V and H are the normal, light, view and halfway vectors.
-    vec3 N = normalize(normal);
-    vec3 L = normalize(lightPosition - worldPosition);
-    vec3 V = normalize(cameraPosition - worldPosition);
-    vec3 H = normalize(L + V);
+    // Make each direction one unit long.
+    vec3 N = normalize(normal); // Surface direction.
+    vec3 L = normalize(lightPosition - worldPosition); // Toward the sun.
+    vec3 V = normalize(cameraPosition - worldPosition); // Toward the camera.
+    vec3 H = normalize(L + V); // Halfway between light and view.
 
+    // Brighter when the surface faces the sun.
     float diffuse = max(dot(N, L), 0.0);
+
+    // Add a shiny spot. 44 controls its tightness.
     float specular = pow(max(dot(N, H), 0.0), 44.0);
+
+    // Find the distance to the sun.
     float distanceFromLight = length(lightPosition - worldPosition);
+
+    // Make the light weaker with distance.
     float attenuation = 1.0 /
         (1.0 + 0.01 * distanceFromLight +
          0.0006 * distanceFromLight * distanceFromLight);
 
+    // Basic light, sunlight, and shine.
     vec3 ambientPart = 0.24 * objectColor;
     vec3 diffusePart = 0.94 * diffuse * objectColor;
     vec3 specularPart = vec3(0.52) * specular;
+
+    // Mix the light parts. Keep full opacity.
     color = vec4(ambientPart + attenuation * (diffusePart + specularPart),
                  1.0);
 }
