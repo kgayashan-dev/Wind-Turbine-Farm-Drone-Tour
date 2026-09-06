@@ -135,15 +135,15 @@ void Application::run() {
 // Release everything we opened.
 void Application::shutdown() {
   if (controlPanelReady) {
-    shutdownControlPanel();
+    shutdownControlPanel(); //  Release the control panel resources. stop workikng
     controlPanelReady = false;
   }
   if (shaderProgram != 0) {
-    glDeleteProgram(shaderProgram);
+    glDeleteProgram(shaderProgram); // Release the shader program resources.
     shaderProgram = 0;
   }
   if (window != nullptr) {
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(window); // Release the window resources.
     window = nullptr;
   }
   glfwTerminate();
