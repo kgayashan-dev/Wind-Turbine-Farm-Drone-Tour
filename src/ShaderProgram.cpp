@@ -13,19 +13,24 @@ namespace {
 constexpr const char *kVertexShader = R"GLSL(
 #version 330 core
 
+# Vertex shader: moves each vertex to its position on the screen.
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec3 aNormal;
 
+// Matrices to move points from model space to world space, then view space, then clip space.
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform mat3 normalMatrix;
-uniform vec3 lightPosition;
-uniform float shadowPlaneY;
-uniform bool shadowMode;
+uniform mat3 normalMatrix;//
+uniform vec3 lightPosition; // The position of the light source in world space. The light source is the sun, which is a directional light source, so its position is very far away.
+uniform float shadowPlaneY; // The Y coordinate of the plane on which to draw shadows. The shadows are drawn on the ground, so this is the ground's Y coordinate.
+
+// Whether to render shadows.
+uniform bool shadowMode; 
 
 out vec3 worldPosition;
 out vec3 normal;
+
 
 void main() {
     vec4 position = model * vec4(aPosition, 1.0);
@@ -47,7 +52,7 @@ void main() {
 
 // Fragment shader: calculates each visible pixel's colour.
 // Choose each pixel colour.
-constexpr const char *kFragmentShader = R"GLSL(
+constexpr const char *kFragmentShader = R"GLSL( // Fragment shader: calculates each visible pixel's colour.
 #version 330 core
 
 in vec3 worldPosition;
@@ -137,8 +142,8 @@ GLuint compileShader(GLenum type, const char *source) {
 
 // Join the two shaders.
 GLuint createShaderProgram() {
-  GLuint vertexShader = compileShader(GL_VERTEX_SHADER, kVertexShader);
-  GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, kFragmentShader);
+  GLuint vertexShader = compileShader(GL_VERTEX_SHADER, kVertexShader); // Create the vertex shader.
+  GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, kFragmentShader); // Create the fragment shader.
 
   // Clean up whichever stage succeeded if the other failed.
   if (vertexShader == 0 || fragmentShader == 0) {
@@ -151,6 +156,7 @@ GLuint createShaderProgram() {
     return 0;
   }
 
+  // Link the shaders into a program.
   GLuint program = glCreateProgram();
   glAttachShader(program, vertexShader);
   glAttachShader(program, fragmentShader);

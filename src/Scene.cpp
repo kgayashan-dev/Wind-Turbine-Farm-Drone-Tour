@@ -209,6 +209,8 @@ void Scene::drawAxes(GLuint program) const { // Draw the XYZ axes in the corner 
            {0.0f, 0.0f, 1.0f}, true);
 }
 
+
+// Render the scene. 
 void Scene::render(GLuint program, const SceneState &state,
                    const glm::mat4 &view, const glm::mat4 &projection,
                    const glm::vec3 &cameraPosition) const {
@@ -239,7 +241,8 @@ void Scene::render(GLuint program, const SceneState &state,
            makeTransform(state.sunPosition, {0.0f, 0.0f, 0.0f},
                          {0.82f, 0.82f, 0.82f}),
            {1.0f, 0.70f, 0.11f}, true);
-
+           
+// Draw the shadows of the turbines and vehicle on the ground.
   if (!state.shadows) {
     return;
   }
