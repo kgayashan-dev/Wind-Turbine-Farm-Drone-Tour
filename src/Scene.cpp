@@ -95,22 +95,23 @@ void Scene::drawBuilding(GLuint program) const { // building and roof.
 }
 
 void Scene::drawTrees(GLuint program) const {
-  for (int index = 0; index < 12; ++index) {
+  for (int index = 0; index < 12; ++index) {// Draw the trees. 12 times, 6 on each side of the road.
     const float x = -34.0f + static_cast<float>(index) * 6.0f;
-    const float z = index % 2 == 0 ? 22.0f : -26.0f;
+    const float z = index % 2 == 0 ? 22.0f : -26.0f; // Alternate sides of the road.
     drawMesh(
         program, cylinder_,
         makeTransform({x, 0.0f, z}, {0.0f, 0.0f, 0.0f}, {0.15f, 1.3f, 0.15f}),
         {0.29f, 0.15f, 0.06f});
     drawMesh(
-        program, sphere_,
+        program, sphere_,// Draw the leafy part of the tree.
         makeTransform({x, 1.7f, z}, {0.0f, 0.0f, 0.0f}, {0.85f, 1.15f, 0.85f}),
         {0.06f, 0.36f, 0.09f});
   }
 }
 
+
 void Scene::drawTurbines(GLuint program, const SceneState &state) const {
-  for (std::size_t index = 0; index < kTurbinePositions.size(); ++index) {
+  for (std::size_t index = 0; index < kTurbinePositions.size(); ++index) { // Draw the turbines. = 6
     const glm::vec3 position = kTurbinePositions[index];
 
     // Tower and nacelle.
@@ -121,6 +122,7 @@ void Scene::drawTurbines(GLuint program, const SceneState &state) const {
              makeTransform(position + glm::vec3(0.0f, 10.55f, -0.25f),
                            {0.0f, 0.0f, 0.0f}, {1.25f, 0.72f, 2.0f}),
              {0.72f, 0.75f, 0.75f});
+
 
     const glm::mat4 rotor =
         glm::translate(glm::mat4(1.0f),
@@ -135,7 +137,7 @@ void Scene::drawTurbines(GLuint program, const SceneState &state) const {
                                    {0.48f, 0.48f, 0.38f}),
              {0.90f, 0.91f, 0.88f});
 
-    for (int blade = 0; blade < 3; ++blade) {
+    for (int blade = 0; blade < 3; ++blade) { // 0-2 for the three blades of each turbine.
       const glm::mat4 bladeParent =
           rotor * glm::rotate(glm::mat4(1.0f),
                               glm::radians(static_cast<float>(blade) * 120.0f),
@@ -184,14 +186,14 @@ void Scene::drawVehicle(GLuint program, const SceneState &state) const {
                       glm::vec3(0.0f, 0.0f, 1.0f)) *
           glm::rotate(glm::mat4(1.0f), glm::radians(90.0f),
                       glm::vec3(1.0f, 0.0f, 0.0f)) *
-          glm::scale(glm::mat4(1.0f),
-                     glm::vec3(kWheelRadius, 0.28f, kWheelRadius));
-      drawMesh(program, cylinder_, wheel, {0.035f, 0.035f, 0.04f});
+          glm::scale(glm::mat4(1.0f), 
+                     glm::vec3(kWheelRadius, 0.28f, kWheelRadius)); // Scale the wheel to its radius and width.
+      drawMesh(program, cylinder_, wheel, {0.035f, 0.035f, 0.04f});// Draw the wheel.
     }
   }
 }
 
-void Scene::drawAxes(GLuint program) const {
+void Scene::drawAxes(GLuint program) const { // Draw the XYZ axes in the corner of the scene.
   const glm::vec3 origin(-36.0f, 0.2f, -27.0f);
   drawMesh(program, cube_,
            makeTransform(origin + glm::vec3(1.5f, 0.0f, 0.0f),

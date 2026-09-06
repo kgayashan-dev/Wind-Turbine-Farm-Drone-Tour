@@ -4,20 +4,11 @@
 #include <cstdlib>
 
 int main() {
-<<<<<<< Updated upstream
   windfarm::Application app;
 
   // Open the window and prepare the scene.
   if (!app.initialize()) {
     app.shutdown();
-=======
-  // Allow project names such as SceneState and updateAnimation without a windfarm:: prefix.
-  using namespace windfarm;
-ss
-  // 1. Create the window and its OpenGL 3.3 Core context.
-  if (glfwInit() == GLFW_FALSE) {
-    std::cerr << "GLFW initialization failed.\n";
->>>>>>> Stashed changes
     return EXIT_FAILURE;
   }
 
