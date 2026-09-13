@@ -18,11 +18,12 @@ namespace {
   // The radius of the vehicle's wheels.
 
   //
-constexpr std::array<glm::vec3, 6> kTurbinePositions = { // The positions of the six turbines in the scene.
+constexpr std::array<glm::vec3, 7> kTurbinePositions = { // The positions of the six turbines in the scene.
     glm::vec3{-15.0f, 0.0f, -11.0f}, glm::vec3{0.0f, 0.0f, -14.0f}, //
     glm::vec3{15.0f, 0.0f, -9.0f},   glm::vec3{-13.0f, 0.0f, 10.0f},
-    glm::vec3{3.0f, 0.0f, 7.0f},     glm::vec3{17.0f, 0.0f, 13.0f},
-    // glm::vec3{3.0f, 0.0f, -9.0f},    
+    glm::vec3{3.0f, 0.0f, 7.0f},     glm::vec3{17.0f, 0.0f, 13.0f}, // 6th 
+    glm::vec3{3.0f, 0.0f, -9.0f},    
+
 };
 
 } // namespace
@@ -145,16 +146,16 @@ void Scene::drawTurbines(GLuint program, const SceneState &state) const {
                                    {0.48f, 0.48f, 0.38f}),
              {0.90f, 0.91f, 0.88f});
 
-    for (int blade = 0; blade < 3; ++blade) { // 0-2 for the three blades of each turbine.
-      const glm::mat4 bladeParent =
-          rotor * glm::rotate(glm::mat4(1.0f),
-                              glm::radians(static_cast<float>(blade) * 120.0f),
+    for (int blade = 0; blade < 3; ++blade) { // 0-2 for the three blades of each turbine. 
+      const glm::mat4 bladeParent = // Rotate each blade 120 degrees around the rotor.
+          rotor * glm::rotate(glm::mat4(1.0f), // Rotate each blade 120 degrees around the rotor.
+                              glm::radians(static_cast<float>(blade) * 120.0f), // Rotate each blade 120 degrees around the rotor.
                               glm::vec3(0.0f, 0.0f, 1.0f));
-      drawMesh(program, cube_,
-               bladeParent * makeTransform({0.0f, 1.95f, 0.0f},
+      drawMesh(program, cube_, // Draw the blades of the turbine.
+               bladeParent * makeTransform({0.0f, 1.95f, 0.0f}, // rotate and position the blades around the rotor.
                                            {0.0f, 0.0f, -4.0f},
                                            {0.30f, 3.9f, 0.15f}),
-               {0.88f, 0.89f, 0.86f});
+               {0.88f, 0.89f, 0.86f}); // Draw the blades of the turbine.
     }
 
     // Small red aviation warning light behind the rotor.
@@ -165,25 +166,31 @@ void Scene::drawTurbines(GLuint program, const SceneState &state) const {
   }
 }
 
-void Scene::drawVehicle(GLuint program, const SceneState &state) const {
+
+// vehicles 
+void Scene::drawVehicle(GLuint program, const SceneState &state) const { 
   const glm::mat4 vehicleParent =
       glm::translate(glm::mat4(1.0f), vehiclePosition(state));
-
+  
   drawMesh(program, cube_,
            vehicleParent * makeTransform({0.0f, 0.56f, 0.0f},
                                          {0.0f, 0.0f, 0.0f},
                                          {3.0f, 0.62f, 1.45f}),
-           {0.94f, 0.48f, 0.05f});
+           {0.94f, 0.48f, 0.05f}); 
   drawMesh(program, cube_,
-           vehicleParent * makeTransform({-0.35f, 1.08f, 0.0f},
+           vehicleParent * makeTransform({-0.35f, 1.08f, 0.0f}, //  Draw the vehicle's cabin.
                                          {0.0f, 0.0f, 0.0f},
                                          {1.45f, 0.58f, 1.18f}),
-           {0.14f, 0.27f, 0.34f});
+           {0.14f, 0.27f, 0.34f}); // Draw the vehicle's cabin.
   drawMesh(program, cube_,
            vehicleParent * makeTransform({1.5f, 0.65f, 0.0f},
                                          {0.0f, 0.0f, 0.0f},
                                          {0.08f, 0.22f, 1.0f}),
-           {1.0f, 0.90f, 0.45f}, true);
+            // RGB colors
+
+           {1.0f, 0.90f, 0.45f}, true);  // Draw the vehicle's exhaust pipe.
+           //true = colour is emissive, so it will appear to glow in the dark.
+           //false = colour is not emissive, so it will not appear to glow in the dark.
 
   for (float x : {-0.95f, 0.95f}) {
     for (float z : {-0.77f, 0.77f}) {
@@ -201,6 +208,8 @@ void Scene::drawVehicle(GLuint program, const SceneState &state) const {
   }
 }
 
+
+// Draw the XYZ axes in the corner of the scene. 
 void Scene::drawAxes(GLuint program) const { // Draw the XYZ axes in the corner of the scene.
   const glm::vec3 origin(-36.0f, 0.2f, -27.0f);
   drawMesh(program, cube_,

@@ -9,6 +9,7 @@
 
 namespace windfarm {
 
+  
 struct CameraFrame {
   glm::vec3 position;
   glm::vec3 target;

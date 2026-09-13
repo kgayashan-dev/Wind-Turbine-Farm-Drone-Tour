@@ -13,6 +13,8 @@
 // Lists of points and triangles.
 #include <vector>
 
+
+// this code is based on the OpenGL tutorial at https://learnopengl.com/Getting-started/Hello-Triangle
 namespace windfarm {
 namespace {
 
