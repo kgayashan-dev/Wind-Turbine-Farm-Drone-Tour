@@ -61,7 +61,6 @@ in vec3 normal;        // Surface direction.
 // Settings sent by the C++ code.
 uniform vec3 objectColor;    // Base colour.
 uniform vec3 lightPosition;  // Sun position.
-uniform vec3 cameraPosition; // Camera position.
 uniform bool lightingEnabled; // Use lighting.
 uniform bool shadowMode;      // Draw a shadow.
 uniform bool emissive;        // Keep the object bright.
@@ -85,14 +84,9 @@ void main() {
     // Make each direction one unit long.
     vec3 N = normalize(normal); // Surface direction.
     vec3 L = normalize(lightPosition - worldPosition); // Toward the sun.
-    vec3 V = normalize(cameraPosition - worldPosition); // Toward the camera.
-    vec3 H = normalize(L + V); // Halfway between light and view.
 
     // Brighter when the surface faces the sun.
     float diffuse = max(dot(N, L), 0.0);
-
-    // Add a shiny spot. 44 controls its tightness.
-    float specular = pow(max(dot(N, H), 0.0), 44.0);
 
     // Find the distance to the sun.
     float distanceFromLight = length(lightPosition - worldPosition);
@@ -102,13 +96,12 @@ void main() {
         (1.0 + 0.01 * distanceFromLight +
          0.0006 * distanceFromLight * distanceFromLight);
 
-    // Basic light, sunlight, and shine.
+    // Basic light and sunlight stay fixed in world space.
     vec3 ambientPart = 0.24 * objectColor;
     vec3 diffusePart = 0.94 * diffuse * objectColor;
-    vec3 specularPart = vec3(0.52) * specular;
 
     // Mix the light parts. Keep full opacity.
-    color = vec4(ambientPart + attenuation * (diffusePart + specularPart),
+    color = vec4(ambientPart + attenuation * diffusePart,
                  1.0);
 }
 )GLSL";

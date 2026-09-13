@@ -23,8 +23,7 @@ public:
   Scene &operator=(const Scene &) = delete;
 
   void render(GLuint program, const SceneState &state, const glm::mat4 &view,
-              const glm::mat4 &projection,
-              const glm::vec3 &cameraPosition) const;
+              const glm::mat4 &projection) const;
 
 private:
   void drawTerrain(GLuint program) const;

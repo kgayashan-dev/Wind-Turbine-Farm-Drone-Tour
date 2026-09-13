@@ -104,7 +104,7 @@ void Application::drawFrame(const Scene &scene) {
       glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 140.0f);
 
   // Draw the world, then the controls.
-  scene.render(shaderProgram, state, view, projection, camera.position);
+  scene.render(shaderProgram, state, view, projection);
   renderControlPanel();
   glfwSwapBuffers(window);
 }

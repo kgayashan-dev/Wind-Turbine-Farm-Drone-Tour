@@ -16,7 +16,7 @@
 namespace windfarm {
 namespace {
 
-constexpr float kPi = 3.14159265358979323846f;
+constexpr float kPi = 3.14159265358979323846f; // The value of pi, used for generating shapes.
 
 // Send a shape to the graphics card.
 Mesh uploadMesh(const std::vector<float> &vertices,
@@ -97,6 +97,8 @@ Mesh createCylinder(int segments, float topRadius) {
 
   // Create pairs of bottom/top vertices around the curved side.
   for (int segment = 0; segment <= segments; ++segment) {
+
+    // Compute the angle of the segment around the circle and its sine and cosine.
     const float angle =
         2.0f * kPi * static_cast<float>(segment) / static_cast<float>(segments);
     const float cosine = std::cos(angle);
@@ -109,6 +111,7 @@ Mesh createCylinder(int segments, float topRadius) {
                      normal.y, normal.z});
   }
 
+  // Join adjacent pairs of vertices with two triangles per segment.
   for (int segment = 0; segment < segments; ++segment) {
     const unsigned int first = static_cast<unsigned int>(2 * segment);
     indices.insert(indices.end(), {first, first + 1, first + 2, first + 1,
@@ -203,6 +206,7 @@ void setBoolUniform(GLuint program, const char *name, bool value) {
 }
 
 // Draw one shape.
+
 void drawMesh(GLuint program, const Mesh &mesh, const glm::mat4 &model,
               glm::vec3 colour, bool emissive) {
   glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE,

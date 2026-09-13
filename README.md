@@ -14,6 +14,12 @@ brew install cmake
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build -j
 ./build/wind_turbine_farm
+
+
+cmake --build build -j4
+./build/wind_turbine_farm
+
+
 ```
 
 The first configuration downloads Dear ImGui into the local `.deps` folder.

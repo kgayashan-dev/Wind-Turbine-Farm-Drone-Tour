@@ -15,10 +15,14 @@
 namespace windfarm {
 namespace {
 
-constexpr std::array<glm::vec3, 6> kTurbinePositions = {
-    glm::vec3{-15.0f, 0.0f, -11.0f}, glm::vec3{0.0f, 0.0f, -14.0f},
+  // The radius of the vehicle's wheels.
+
+  //
+constexpr std::array<glm::vec3, 6> kTurbinePositions = { // The positions of the six turbines in the scene.
+    glm::vec3{-15.0f, 0.0f, -11.0f}, glm::vec3{0.0f, 0.0f, -14.0f}, //
     glm::vec3{15.0f, 0.0f, -9.0f},   glm::vec3{-13.0f, 0.0f, 10.0f},
     glm::vec3{3.0f, 0.0f, 7.0f},     glm::vec3{17.0f, 0.0f, 13.0f},
+    // glm::vec3{3.0f, 0.0f, -9.0f},    
 };
 
 } // namespace
@@ -43,16 +47,19 @@ void Scene::drawTerrain(GLuint program) const {
   drawTrees(program);
 }
 
+// Draw the ground, road and centre markings.
 void Scene::drawGround(GLuint program) const {
   // Grass field, road and centre markings.
   drawMesh(program, cube_,
            makeTransform({0.0f, -0.25f, 0.0f}, {0.0f, 0.0f, 0.0f},
                          {82.0f, 0.5f, 66.0f}),
            {0.21f, 0.47f, 0.18f});
+           // Road and centre markings.
   drawMesh(program, cube_,
            makeTransform({0.0f, 0.02f, 0.0f}, {0.0f, 0.0f, 0.0f},
                          {76.0f, 0.10f, 4.8f}),
            {0.22f, 0.23f, 0.22f});
+           // Centre markings.
   for (int x = -34; x <= 34; x += 7) {
     drawMesh(program, cube_,
              makeTransform({static_cast<float>(x), 0.10f, 0.0f},
@@ -62,11 +69,11 @@ void Scene::drawGround(GLuint program) const {
 
   // Layered cones form the distant mountain range and snowy peaks.
 }
-
+// Draw the mountains and snowy peaks.
 void Scene::drawMountains(GLuint program) const {
   for (int index = 0; index < 7; ++index) { // Draw the mountains.
-    const float x = -32.0f + static_cast<float>(index) * 11.0f;
-    const float z = 27.0f + static_cast<float>(index % 2) * 3.0f;
+    const float x = -32.0f + static_cast<float>(index) * 11.0f;// Position the mountains along the X-axis.
+    const float z = 27.0f + static_cast<float>(index % 2) * 3.0f; // 
     drawMesh(program, cone_,
              makeTransform({x, 0.0f, z}, {0.0f, 0.0f, 0.0f},
                            {7.5f + static_cast<float>(index % 3),
@@ -110,8 +117,9 @@ void Scene::drawTrees(GLuint program) const {
 }
 
 
+// Draw the turbines and their rotors.
 void Scene::drawTurbines(GLuint program, const SceneState &state) const {
-  for (std::size_t index = 0; index < kTurbinePositions.size(); ++index) { // Draw the turbines. = 6
+  for (std::size_t index = 0; index < kTurbinePositions.size(); ++index) { // Draw the turbines. = 6 times and six positions in the kTurbinePositions array.
     const glm::vec3 position = kTurbinePositions[index];
 
     // Tower and nacelle.
@@ -212,8 +220,7 @@ void Scene::drawAxes(GLuint program) const { // Draw the XYZ axes in the corner 
 
 // Render the scene. 
 void Scene::render(GLuint program, const SceneState &state,
-                   const glm::mat4 &view, const glm::mat4 &projection,
-                   const glm::vec3 &cameraPosition) const {
+                   const glm::mat4 &view, const glm::mat4 &projection) const {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(program);
 
@@ -224,8 +231,6 @@ void Scene::render(GLuint program, const SceneState &state,
                      glm::value_ptr(projection));
   glUniform3fv(glGetUniformLocation(program, "lightPosition"), 1,
                glm::value_ptr(state.sunPosition));
-  glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1,
-               glm::value_ptr(cameraPosition));
   glUniform1f(glGetUniformLocation(program, "shadowPlaneY"), 0.065f);
   setBoolUniform(program, "lightingEnabled", state.lighting);
   setBoolUniform(program, "shadowMode", false);
