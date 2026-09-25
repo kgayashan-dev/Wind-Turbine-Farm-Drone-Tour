@@ -33,7 +33,7 @@ namespace windfarm {
 
 bool Application::initialize() {
   // Start the window library.
-  if (!glfwInit()) {
+  if (!glfwInit()) { // window library initialization failed.
     std::cerr << "GLFW initialization failed.\n";
     return false;
   }
@@ -47,14 +47,14 @@ bool Application::initialize() {
 
   // Open the window.
   window =
-      glfwCreateWindow(windowSize.width, windowSize.height,
+      glfwCreateWindow(windowSize.width, windowSize.height, // Create the window.
                        "Wind Turbine Farm Drone Tour", nullptr, nullptr);
   if (window == nullptr) {
     std::cerr << "Window creation failed.\n";
     return false;
   }
 
-  glfwMakeContextCurrent(window);
+  glfwMakeContextCurrent(window); // Make the window's OpenGL context current.
   glfwSwapInterval(1); // Match the screen refresh.
 
   glfwGetFramebufferSize(window, &windowSize.width, &windowSize.height);
