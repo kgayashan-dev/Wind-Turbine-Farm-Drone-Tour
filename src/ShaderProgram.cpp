@@ -71,7 +71,7 @@ out vec4 color;
 void main() {
     // Shadows are dark and partly see-through.
     if (shadowMode) {
-        color = vec4(0.022, 0.025, 0.030, 0.48); // 48% opacity.
+        color = vec4(0.022, 0.025, 0.030, 0.34); // Soft, translucent shadow.
         return; // Skip the lighting maths.
     }
 

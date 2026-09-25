@@ -230,7 +230,8 @@ void Scene::drawAxes(GLuint program) const { // Draw the XYZ axes in the corner 
 // Render the scene. 
 void Scene::render(GLuint program, const SceneState &state,
                    const glm::mat4 &view, const glm::mat4 &projection) const {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glStencilMask(0xFF);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
   glUseProgram(program);
 
   // Values shared by all objects in this frame.
@@ -266,11 +267,23 @@ void Scene::render(GLuint program, const SceneState &state,
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Blend the shadows with the ground.
   glDepthMask(GL_FALSE); // Don't write to the depth buffer when drawing shadows, so that the shadows don't hide other objects.
 
+  // A projected closed mesh has many triangles covering the same ground
+  // pixels. Without a stencil mask, alpha blending runs once per triangle and
+  // turns those overlaps into the almost-black lines visible around towers.
+  // Mark a pixel after its first shadow fragment so the complete shadow pass
+  // produces one consistent translucent silhouette.
+  glEnable(GL_STENCIL_TEST);
+  glStencilMask(0xFF);
+  glStencilFunc(GL_EQUAL, 0, 0xFF);
+  glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
   // Draw the tree shadows too.
   drawTrees(program);
   drawTurbines(program, state);
   drawVehicle(program, state);
 
+  glStencilMask(0x00);
+  glDisable(GL_STENCIL_TEST);
   glDepthMask(GL_TRUE);
   glDisable(GL_BLEND);
   setBoolUniform(program, "shadowMode", false);

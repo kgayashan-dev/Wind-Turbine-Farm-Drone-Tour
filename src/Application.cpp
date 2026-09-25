@@ -44,6 +44,9 @@ bool Application::initialize() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
   glfwWindowHint(GLFW_SAMPLES, 4);
+  // The planar-shadow pass uses this to ensure overlapping triangles darken a
+  // ground pixel only once.
+  glfwWindowHint(GLFW_STENCIL_BITS, 8);
 
   // Open the window.
   window =
