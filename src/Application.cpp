@@ -72,7 +72,7 @@ bool Application::initialize() {
   }
 
   if (!initializeControlPanel(window)) {
-    std::cerr << "Dear ImGui initialization failed.\n";
+    std::cerr << "ImGui initialization failed.\n";
     return false;
   }
 
@@ -115,7 +115,7 @@ void Application::drawFrame(const Scene &scene) {
 // Repeat until the window closes.
 void Application::run() {
   Scene scene;
-  double previousTime = glfwGetTime();
+  double previousTime = glfwGetTime(); // Get the current time in seconds.
 
   while (!glfwWindowShouldClose(window)) {
     const double currentTime = glfwGetTime();

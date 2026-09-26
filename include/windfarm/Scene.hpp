@@ -16,8 +16,8 @@ namespace windfarm {
 // Owns reusable meshes and draws the complete wind-farm world.
 class Scene {
 public:
-  Scene();
-  ~Scene();
+  Scene(); // Create the meshes for the scene.
+  ~Scene(); // Destroy the meshes for the scene.
 
   Scene(const Scene &) = delete;
   Scene &operator=(const Scene &) = delete;
@@ -26,14 +26,14 @@ public:
               const glm::mat4 &projection) const;
 
 private:
-  void drawTerrain(GLuint program) const;
-  void drawGround(GLuint program) const;
-  void drawMountains(GLuint program) const;
-  void drawBuilding(GLuint program) const;
-  void drawTrees(GLuint program) const;
-  void drawTurbines(GLuint program, const SceneState &state) const;
-  void drawVehicle(GLuint program, const SceneState &state) const;
-  void drawAxes(GLuint program) const;
+  void drawTerrain(GLuint program) const; // green ground and mountains
+  void drawGround(GLuint program) const; // green ground
+  void drawMountains(GLuint program) const; // mountains
+  void drawBuilding(GLuint program) const;  // building
+  void drawTrees(GLuint program) const;// trees
+  void drawTurbines(GLuint program, const SceneState &state) const; // turbines
+  void drawVehicle(GLuint program, const SceneState &state) const; // vehicle
+  void drawAxes(GLuint program) const; // axes for debugging
 
   Mesh cube_;
   Mesh cylinder_;

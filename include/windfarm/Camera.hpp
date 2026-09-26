@@ -10,9 +10,9 @@
 namespace windfarm {
 
   
-struct CameraFrame {
-  glm::vec3 position;
-  glm::vec3 target;
+struct CameraFrame { // The eye and target for the camera.
+  glm::vec3 position; // The eye position of the camera.
+  glm::vec3 target; // The target position of the camera.
 };
 
 // A smooth mathematical flight path through the turbine rows.
