@@ -22,9 +22,11 @@ translation animation, multiple cameras, lighting, long shadows and depth testin
   rows. `lookAt` builds the view matrix from eye, target and up vectors.
 - **Projection:** The shader uses `Projection × View × Model × localPosition`.
 - **Lighting:** Normalized normal and light vectors use a dot product for diffuse
-  brightness; the half vector produces Blinn–Phong highlights.
-- **Long shadows:** The fixed sun is high enough to illuminate the complete scene
-  but far to one side, creating a low light angle and long planar shadows.
+  brightness, while ambient light keeps unlit surfaces visible.
+- **Shadow mapping:** The scene is first rendered from the sun into a depth
+  texture. The camera pass compares each surface with that stored depth, so
+  terrain, mountains, buildings, trees, turbines, and the vehicle can receive
+  shadows.
 - **Visibility:** The z-buffer keeps the nearest fragment for every screen pixel.
 - **Interactive interface:** Dear ImGui directly changes animation, camera and
   lighting state at runtime. The live coordinates make world-space movement and
@@ -37,12 +39,14 @@ translation animation, multiple cameras, lighting, long shadows and depth testin
 3. Press `T` to demonstrate rotor hierarchy and rotation.
 4. Press `V` to stop/start the vehicle and explain wheel rotation.
 5. Press `C` for drone route, overview orbit and vehicle-follow cameras.
-6. Press `L` and `H` to isolate lighting and the long projected shadows.
-7. Move the sun sliders and explain how the fixed light position changes shadow
-   direction and length.
+6. Press `L` and `H` to isolate lighting and depth-map shadows.
+7. Move the sun sliders and explain how the light-space View and Projection
+   matrices change the depth map.
 8. Explain `T × R × S`, MVP matrices and the z-buffer, then select **Reset scene**.
 
-## Limitation
+## Shadow-map quality
 
-The shadows are projected onto a flat ground plane. Shadow mapping would allow
-accurate shadows over uneven terrain and mountain surfaces.
+A 2048 by 2048 depth texture and 3 by 3 percentage-closer filtering produce
+smooth interactive shadows. A small depth bias prevents self-shadowing
+artifacts. Like every finite shadow map, very close inspection can still reveal
+limited resolution at shadow edges.

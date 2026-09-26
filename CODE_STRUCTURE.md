@@ -20,8 +20,9 @@ If setup fails, the program cleans up and exits.
 | `src/Input.cpp` | Handles keys and window resizing |
 | `src/ControlPanel.cpp` | Builds the buttons and sliders |
 | `src/Scene.cpp` | Draws the farm and shadows |
+| `src/ShadowMap.cpp` | Owns the sun depth texture and framebuffer |
 | `src/Graphics.cpp` | Makes and draws basic shapes |
-| `src/ShaderProgram.cpp` | Runs the graphics card's drawing code |
+| `src/ShaderProgram.cpp` | Builds the camera shader and sun depth shader |
 | `CMakeLists.txt` | Builds the program and connects libraries |
 
 Headers in `include/windfarm/` list the functions and classes.
@@ -36,10 +37,11 @@ The old version is in `legacy/`; it is not part of the build.
 4. Find the vehicle and camera positions.
 5. Build the controls.
 6. Set the camera view.
-7. Draw the farm and shadows.
-8. Draw the controls and show the picture.
+7. Render scene depth from the sun into the shadow map.
+8. Draw the farm from the camera and compare depths to create shadows.
+9. Draw the controls and show the picture.
 
-`Application::drawFrame()` handles steps 4 to 8.
+`Application::drawFrame()` handles steps 4 to 9.
 The scene releases its shapes before the window closes.
 
 ## Smaller sections

@@ -3,7 +3,7 @@
 A modern OpenGL scene containing six wind turbines with rotating blades, an
 automatic drone route through the farm, a moving service vehicle with rotating
 wheels, a road, farm buildings, terrain details, mountains, fixed sunlight and
-long planar shadows. A Dear ImGui panel provides live interactive control and
+depth-map shadows that follow the ground and mountains. A Dear ImGui panel provides live interactive control and
 displays the current scene coordinates.
 
 ## Build on macOS

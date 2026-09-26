@@ -1,123 +1,131 @@
 // Create the shaders.
-#include "windfarm/ShaderProgram.hpp" // iport the header file for shader program creation
+#include "windfarm/ShaderProgram.hpp"
 
 // Console messages.
-#include <iostream> // if there are errros we can print them to the console
+#include <iostream>
 // Text storage.
-#include <string> // for storing the shader source code and error messages
-//declare 
-namespace windfarm { 
+#include <string>
 
+namespace windfarm {
 namespace {
 
-// Move points onto the screen.
-//constalnt expressions for the vertex and fragment shader source code 
-constexpr const char *kVertexShader = R"GLSL( // enable compile time evaluation of the shader source code and the
-
-// vertex shader source code is stored as a string 
-
-
-
+// These constant expressions store the scene shader source code and enable
+// compile-time initialization of the strings.
+constexpr const char *kVertexShader = R"GLSL( //  vertex shader for the scene rendering with lighting and shadows
 #version 330 core
 
-// Move each point onto the screen.
-layout(location = 0) in vec3 aPosition; // The position of the vertex in model space.
-layout(location = 1) in vec3 aNormal;   // The normal of the vertex in model space.
+layout(location = 0) in vec3 aPosition;
+layout(location = 1) in vec3 aNormal;
 
-// Matrices to move points from model space to world space, then view space, then clip space.
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform mat3 normalMatrix;//
-uniform vec3 lightPosition; // The position of the light source in world space. The light source is the sun, which is a directional light source, so its position is very far away.
-uniform float shadowPlaneY; // The Y coordinate of the plane on which to draw shadows. The shadows are drawn on the ground, so this is the ground's Y coordinate.
-
-// Whether to render shadows.
-uniform bool shadowMode; 
+uniform mat4 lightSpaceMatrix;
+uniform mat3 normalMatrix;
 
 out vec3 worldPosition;
-out vec3 normal;
-
+out vec3 worldNormal;
+out vec4 lightSpacePosition;
 
 void main() {
     vec4 position = model * vec4(aPosition, 1.0);
-
-    if (shadowMode) {
-        float t = (shadowPlaneY - lightPosition.y) /
-                  (position.y - lightPosition.y);
-        position.xyz = lightPosition + t * (position.xyz - lightPosition);
-        position.y += 0.018;
-    }
-
     worldPosition = position.xyz;
-    normal = normalize(normalMatrix * aNormal);
-
-    // Model -> World -> View -> Projection (clip space).
+    worldNormal = normalize(normalMatrix * aNormal);
+    lightSpacePosition = lightSpaceMatrix * position;
     gl_Position = projection * view * position;
 }
 )GLSL";
 
-// Store the pixel shader as text.
-constexpr const char *kFragmentShader = R"GLSL(
+constexpr const char *kFragmentShader = R"GLSL( //   fragment shader for the scene rendering with lighting and shadows
 #version 330 core
 
+in vec3 worldPosition;
+in vec3 worldNormal;
+in vec4 lightSpacePosition;
 
-// fragment shader source code is stored as a string 
+uniform vec3 objectColor;
+uniform vec3 lightPosition;
+uniform bool lightingEnabled;
+uniform bool shadowsEnabled;
+uniform bool emissive;
+uniform sampler2D shadowMap;
 
-// Values from the vertex shader.
-in vec3 worldPosition; // Surface position.
-in vec3 normal;        // Surface direction.
-
-// Settings sent by the C++ code.
-uniform vec3 objectColor;    // Base colour.
-uniform vec3 lightPosition;  // Sun position.
-uniform bool lightingEnabled; // Use lighting.
-uniform bool shadowMode;      // Draw a shadow.
-uniform bool emissive;        // Keep the object bright.
-
-// Final red, green, blue, and opacity.
 out vec4 color;
 
-void main() {
-    // Shadows are dark and partly see-through.
-    if (shadowMode) {
-        color = vec4(0.022, 0.025, 0.030, 0.34); // Soft, translucent shadow.
-        return; // Skip the lighting maths.
+// Compare this surface with the closest depth seen from the sun.
+float calculateShadow(vec3 N, vec3 L) {
+    vec3 projected = lightSpacePosition.xyz / lightSpacePosition.w;
+    projected = projected * 0.5 + 0.5;
+
+    // Points outside the sun's view are not shadowed by this map.
+    if (projected.z <= 0.0 || projected.z >= 1.0 ||
+        projected.x <= 0.0 || projected.x >= 1.0 ||
+        projected.y <= 0.0 || projected.y >= 1.0) {
+        return 0.0;
     }
 
-    // Use the base colour if lighting is not needed.
+    // The angle-dependent bias prevents a surface shadowing itself.
+    float bias = max(0.0025 * (1.0 - dot(N, L)), 0.0006);
+    vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
+    float shadow = 0.0;
+
+    // Percentage-closer filtering softens the blocky shadow-map edge.
+    for (int x = -1; x <= 1; ++x) {
+        for (int y = -1; y <= 1; ++y) {
+            float closestDepth =
+                texture(shadowMap, projected.xy + vec2(x, y) * texelSize).r;
+            shadow += projected.z - bias > closestDepth ? 1.0 : 0.0;
+        }
+    }
+    return shadow / 9.0;
+}
+
+void main() {
     if (emissive || !lightingEnabled) {
-        color = vec4(objectColor, 1.0); // Fully solid.
+        color = vec4(objectColor, 1.0);
         return;
     }
 
-    // Make each direction one unit long.
-    vec3 N = normalize(normal); // Surface direction.
-    vec3 L = normalize(lightPosition - worldPosition); // Toward the sun.
+    vec3 N = normalize(worldNormal);
+    vec3 L = normalize(lightPosition - worldPosition);
+    float diffuse = max(dot(N, L), 0.0);
 
-    // Brighter when the surface faces the sun.
-    float diffuse = max(dot(N, L), 0.0); // dot product of the surface direction and the light direction, clamped to zero.
-
-    // Find the distance to the sun.
     float distanceFromLight = length(lightPosition - worldPosition);
+    float attenuation =
+        1.0 / (1.0 + 0.01 * distanceFromLight +
+               0.0006 * distanceFromLight * distanceFromLight);
 
-    // Make the light weaker with distance.
-    float attenuation = 1.0 /
-        (1.0 + 0.01 * distanceFromLight +
-         0.0006 * distanceFromLight * distanceFromLight);
-
-    // Basic light and sunlight stay fixed in world space.
+    float shadow = shadowsEnabled ? calculateShadow(N, L) : 0.0;
     vec3 ambientPart = 0.24 * objectColor;
-    vec3 diffusePart = 0.94 * diffuse * objectColor;
+    vec3 diffusePart =
+        (1.0 - 0.76 * shadow) * 0.94 * diffuse * objectColor;
 
-    // Mix the light parts. Keep full opacity.
-    color = vec4(ambientPart + attenuation * diffusePart,
-                 1.0);
+    color = vec4(ambientPart + attenuation * diffusePart, 1.0);
+}
+)GLSL";
+
+// The depth shader renders the scene from the sun and writes only a z value.
+constexpr const char *kDepthVertexShader = R"GLSL(
+#version 330 core
+
+layout(location = 0) in vec3 aPosition;
+
+uniform mat4 model;
+uniform mat4 lightSpaceMatrix;
+
+void main() {
+    gl_Position = lightSpaceMatrix * model * vec4(aPosition, 1.0);
+}
+)GLSL";
+
+constexpr const char *kDepthFragmentShader = R"GLSL(
+#version 330 core
+
+void main() {
 }
 )GLSL";
 
 // Read and print the driver's compilation or linking diagnostics.
-// Show shader errors.
 void printShaderLog(GLuint object, bool isProgram) {
   GLint length = 0;
   if (isProgram) {
@@ -139,10 +147,9 @@ void printShaderLog(GLuint object, bool isProgram) {
   std::cerr << log << '\n';
 }
 
-// Prepare one shader.
-GLuint compileShader(GLenum type, const char *source) { // Create a shader of the given type and compile it from the given source code.
+GLuint compileShader(GLenum type, const char *source) {
   GLuint shader = glCreateShader(type);
-  glShaderSource(shader, 1, &source, nullptr); // 
+  glShaderSource(shader, 1, &source, nullptr);
   glCompileShader(shader);
 
   GLint succeeded = GL_FALSE;
@@ -155,14 +162,10 @@ GLuint compileShader(GLenum type, const char *source) { // Create a shader of th
   return shader;
 }
 
-} // namespace
+GLuint createProgram(const char *vertexSource, const char *fragmentSource) {
+  GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexSource);
+  GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentSource);
 
-// Join the two shaders.
-GLuint createShaderProgram() { // exported function to create a shader program by compiling and linking the vertex and fragment shaders.
-  GLuint vertexShader = compileShader(GL_VERTEX_SHADER, kVertexShader); // Create the vertex shader.
-  GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, kFragmentShader); // Create the fragment shader.
-
-  // Clean up whichever stage succeeded if the other failed.
   if (vertexShader == 0 || fragmentShader == 0) {
     if (vertexShader != 0) {
       glDeleteShader(vertexShader);
@@ -173,7 +176,6 @@ GLuint createShaderProgram() { // exported function to create a shader program b
     return 0;
   }
 
-  // Link the shaders into a program.
   GLuint program = glCreateProgram();
   glAttachShader(program, vertexShader);
   glAttachShader(program, fragmentShader);
@@ -189,8 +191,17 @@ GLuint createShaderProgram() { // exported function to create a shader program b
     glDeleteProgram(program);
     return 0;
   }
-
   return program;
+}
+
+} // namespace
+
+GLuint createShaderProgram() {
+  return createProgram(kVertexShader, kFragmentShader);
+}
+
+GLuint createDepthShaderProgram() {
+  return createProgram(kDepthVertexShader, kDepthFragmentShader);
 }
 
 } // namespace windfarm

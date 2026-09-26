@@ -26,10 +26,29 @@
 
 // Limit values.
 #include <algorithm>
+// Absolute value.
+#include <cmath>
 // Console messages.
 #include <iostream>
 
 namespace windfarm {
+namespace {
+
+// Build an orthographic camera that covers the complete farm from the sun.
+glm::mat4 makeLightSpaceMatrix(const glm::vec3 &sunPosition) {
+  const glm::vec3 target(0.0f, 3.0f, 0.0f);
+  const glm::vec3 direction = glm::normalize(target - sunPosition);
+  const glm::vec3 up = std::abs(direction.y) > 0.95f
+                           ? glm::vec3(0.0f, 0.0f, 1.0f)
+                           : glm::vec3(0.0f, 1.0f, 0.0f);
+
+  const glm::mat4 lightView = glm::lookAt(sunPosition, target, up);
+  const glm::mat4 lightProjection =
+      glm::ortho(-60.0f, 60.0f, -60.0f, 60.0f, 1.0f, 180.0f);
+  return lightProjection * lightView;
+}
+
+} // namespace
 
 bool Application::initialize() {
   // Start the window library.
@@ -44,9 +63,6 @@ bool Application::initialize() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
   glfwWindowHint(GLFW_SAMPLES, 4);
-  // The planar-shadow pass uses this to ensure overlapping triangles darken a
-  // ground pixel only once.
-  glfwWindowHint(GLFW_STENCIL_BITS, 8);
 
   // Open the window.
   window =
@@ -68,6 +84,13 @@ bool Application::initialize() {
   // Prepare drawing and controls.
   shaderProgram = createShaderProgram();
   if (shaderProgram == 0) {
+    return false;
+  }
+  depthShaderProgram = createDepthShaderProgram();
+  if (depthShaderProgram == 0) {
+    return false;
+  }
+  if (!shadowMap.initialize()) {
     return false;
   }
 
@@ -106,8 +129,21 @@ void Application::drawFrame(const Scene &scene) {
   const glm::mat4 projection =
       glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 140.0f);
 
-  // Draw the world, then the controls.
-  scene.render(shaderProgram, state, view, projection);
+  const glm::mat4 lightSpaceMatrix = makeLightSpaceMatrix(state.sunPosition);
+
+  // Pass 1: save the scene depth from the sun's point of view.
+  if (state.shadows) {
+    shadowMap.beginDepthPass();
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(2.0f, 4.0f);
+    scene.renderDepth(depthShaderProgram, state, lightSpaceMatrix);
+    glDisable(GL_POLYGON_OFFSET_FILL);
+    shadowMap.endDepthPass(windowSize.width, windowSize.height);
+  }
+
+  // Pass 2: draw from the camera and compare with the sun's depth texture.
+  shadowMap.bindTexture(GL_TEXTURE0);
+  scene.render(shaderProgram, state, view, projection, lightSpaceMatrix);
   renderControlPanel();
   glfwSwapBuffers(window);
 }
@@ -145,6 +181,11 @@ void Application::shutdown() {
     glDeleteProgram(shaderProgram); // Release the shader program resources.
     shaderProgram = 0;
   }
+  if (depthShaderProgram != 0) {
+    glDeleteProgram(depthShaderProgram);
+    depthShaderProgram = 0;
+  }
+  shadowMap.shutdown();
   if (window != nullptr) {
     glfwDestroyWindow(window); // Release the window resources.
     window = nullptr;
