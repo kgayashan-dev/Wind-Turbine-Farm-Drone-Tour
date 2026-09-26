@@ -287,9 +287,7 @@ namespace windfarm
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Blend the shadows with the ground.
     glDepthMask(GL_FALSE);                             // Don't write to the depth buffer when drawing shadows, so that the shadows don't hide other objects.
 
-    // A projected closed mesh has many triangles covering the same ground
-    // pixels. Without a stencil mask, alpha blending runs once per triangle and
-    // turns those overlaps into the almost-black lines visible around towers.
+ 
     // Mark a pixel after its first shadow fragment so the complete shadow pass
     // produces one consistent translucent silhouette.
     glEnable(GL_STENCIL_TEST);
