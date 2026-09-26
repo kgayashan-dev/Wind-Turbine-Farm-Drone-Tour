@@ -6,6 +6,7 @@
 
 namespace windfarm {
 
-GLuint createShaderProgram(); // Create a shader program from the vertex and fragment shaders in the resources folder.
+GLuint createShaderProgram();
+GLuint createDepthShaderProgram();
 
 } // namespace windfarm

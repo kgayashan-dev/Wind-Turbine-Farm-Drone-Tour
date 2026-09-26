@@ -23,7 +23,11 @@ public:
   Scene &operator=(const Scene &) = delete;
 
   void render(GLuint program, const SceneState &state, const glm::mat4 &view,
-              const glm::mat4 &projection) const;
+              const glm::mat4 &projection,
+              const glm::mat4 &lightSpaceMatrix,
+              GLuint shadowTexture) const;
+  void renderDepth(GLuint depthProgram, const SceneState &state,
+                   const glm::mat4 &lightSpaceMatrix) const;
 
 private:
   void drawTerrain(GLuint program) const; // green ground and mountains
@@ -34,6 +38,7 @@ private:
   void drawTurbines(GLuint program, const SceneState &state) const; // turbines
   void drawVehicle(GLuint program, const SceneState &state) const; // vehicle
   void drawAxes(GLuint program) const; // axes for debugging
+  void drawShadowCasters(GLuint program, const SceneState &state) const;
 
   Mesh cube_;
   Mesh cylinder_;

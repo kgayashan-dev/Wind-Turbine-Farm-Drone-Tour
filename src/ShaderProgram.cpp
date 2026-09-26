@@ -12,7 +12,12 @@ namespace {
 
 // Move points onto the screen.
 //constalnt expressions for the vertex and fragment shader source code 
-constexpr const char *kVertexShader = R"GLSL( // enable compile time evaluation of the shader source code
+constexpr const char *kVertexShader = R"GLSL( // enable compile time evaluation of the shader source code and the
+
+// vertex shader source code is stored as a string 
+
+
+
 #version 330 core
 
 // Move each point onto the screen.
@@ -56,6 +61,9 @@ void main() {
 constexpr const char *kFragmentShader = R"GLSL(
 #version 330 core
 
+
+// fragment shader source code is stored as a string 
+
 // Values from the vertex shader.
 in vec3 worldPosition; // Surface position.
 in vec3 normal;        // Surface direction.
@@ -88,7 +96,7 @@ void main() {
     vec3 L = normalize(lightPosition - worldPosition); // Toward the sun.
 
     // Brighter when the surface faces the sun.
-    float diffuse = max(dot(N, L), 0.0);
+    float diffuse = max(dot(N, L), 0.0); // dot product of the surface direction and the light direction, clamped to zero.
 
     // Find the distance to the sun.
     float distanceFromLight = length(lightPosition - worldPosition);
@@ -132,7 +140,7 @@ void printShaderLog(GLuint object, bool isProgram) {
 }
 
 // Prepare one shader.
-GLuint compileShader(GLenum type, const char *source) {
+GLuint compileShader(GLenum type, const char *source) { // Create a shader of the given type and compile it from the given source code.
   GLuint shader = glCreateShader(type);
   glShaderSource(shader, 1, &source, nullptr); // 
   glCompileShader(shader);

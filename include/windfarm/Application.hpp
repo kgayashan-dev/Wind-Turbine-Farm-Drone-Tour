@@ -3,6 +3,8 @@
 
 // Shared settings and input.
 #include "windfarm/Input.hpp"
+// Depth texture used for shadows.
+#include "windfarm/ShadowMap.hpp"
 // OpenGL types.
 #include <OpenGL/gl3.h>
 
@@ -25,6 +27,8 @@ private:
   AppContext appContext{&state, &windowSize};
   GLFWwindow *window = nullptr;
   GLuint shaderProgram = 0;
+  GLuint depthShaderProgram = 0;
+  ShadowMap shadowMap;
   bool controlPanelReady = false;
 };
 

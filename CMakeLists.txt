@@ -71,6 +71,7 @@ add_executable(wind_turbine_farm
   src/Graphics.cpp
   src/Input.cpp
   src/Scene.cpp
+  src/ShadowMap.cpp
   src/ShaderProgram.cpp
 )
 
