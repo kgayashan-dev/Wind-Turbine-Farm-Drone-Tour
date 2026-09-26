@@ -158,7 +158,7 @@ GLuint compileShader(GLenum type, const char *source) { // Create a shader of th
 } // namespace
 
 // Join the two shaders.
-GLuint createShaderProgram() {
+GLuint createShaderProgram() { // exported function to create a shader program by compiling and linking the vertex and fragment shaders.
   GLuint vertexShader = compileShader(GL_VERTEX_SHADER, kVertexShader); // Create the vertex shader.
   GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, kFragmentShader); // Create the fragment shader.
 

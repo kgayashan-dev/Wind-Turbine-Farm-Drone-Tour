@@ -23,7 +23,7 @@ namespace windfarm
     // Show the animation controls.
     void drawAnimationControls(SceneState &state)
     {
-      if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen))
+      if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen)) // Show the animation .
       {
         ImGui::Checkbox("Drone movement", &state.droneMoving);
         ImGui::SliderFloat("Drone speed", &state.droneSpeed, 0.03f, 0.65f, "%.2f");
@@ -88,7 +88,7 @@ namespace windfarm
 
   } // namespace
 
-  bool initializeControlPanel(GLFWwindow *window)
+  bool initializeControlPanel(GLFWwindow *window) // Initialize the control panel's ImGui context and backends.
   {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -106,7 +106,7 @@ namespace windfarm
       ImGui::DestroyContext();
       return false;
     }
-    if (!ImGui_ImplOpenGL3_Init("#version 330 core"))
+    if (!ImGui_ImplOpenGL3_Init("#version 330 core")) // Initialize the OpenGL backend for ImGui with the specified GLSL version.
     {
       ImGui_ImplGlfw_Shutdown();
       ImGui::DestroyContext();
@@ -123,7 +123,7 @@ namespace windfarm
     ImGui::NewFrame();
   }
 
-  void drawControlPanel(SceneState &state, const glm::vec3 &cameraPosition,
+  void drawControlPanel(SceneState &state, const glm::vec3 &cameraPosition, // Draw the control panel's widgets to the screen.
                         const glm::vec3 &currentVehiclePosition)
   {
     ImGui::SetNextWindowPos(ImVec2(18.0f, 18.0f), ImGuiCond_FirstUseEver);

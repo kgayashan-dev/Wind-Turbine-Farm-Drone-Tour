@@ -246,7 +246,9 @@ namespace windfarm
 
   // Render the scene.
   void Scene::render(GLuint program, const SceneState &state,
-                     const glm::mat4 &view, const glm::mat4 &projection) const
+                     const glm::mat4 &view, const glm::mat4 &projection,
+                     const glm::mat4 &lightSpaceMatrix,
+                     GLuint shadowTexture) const
   {
     glStencilMask(0xFF);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
