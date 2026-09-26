@@ -10,7 +10,7 @@ namespace windfarm {
 namespace {
 
 // Move points onto the screen.
-constexpr const char *kVertexShader = R"GLSL(
+constexpr const char *kVertexShader = R"GLSL( // evaluate in compile time not run time 
 #version 330 core
 
 // Move each point onto the screen.
