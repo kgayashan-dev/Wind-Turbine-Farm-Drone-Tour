@@ -18,7 +18,7 @@ struct SceneState {
   bool axes = true;
 
   // 0 = drone route, 1 = overview orbit, 2 = vehicle follow.
-  int cameraMode = 0;
+  int cameraMode = 1;
 
   // Positions and angles.
   float droneProgress = 0.3f; // How far along the drone route the drone is, from 0.0 to 1.0.

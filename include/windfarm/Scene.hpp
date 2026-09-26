@@ -19,7 +19,7 @@ public:
   Scene(); // Create the meshes for the scene.
   ~Scene(); // Destroy the meshes for the scene.
 
-  Scene(const Scene &) = delete;
+  Scene(const Scene &) = delete; // 
   Scene &operator=(const Scene &) = delete;
 
   void render(GLuint program, const SceneState &state, const glm::mat4 &view,
