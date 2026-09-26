@@ -1,21 +1,23 @@
 // Create the shaders.
-#include "windfarm/ShaderProgram.hpp"
+#include "windfarm/ShaderProgram.hpp" // iport the header file for shader program creation
 
 // Console messages.
-#include <iostream>
+#include <iostream> // if there are errros we can print them to the console
 // Text storage.
-#include <string>
+#include <string> // for storing the shader source code and error messages
+//declare 
+namespace windfarm { 
 
-namespace windfarm {
 namespace {
 
 // Move points onto the screen.
-constexpr const char *kVertexShader = R"GLSL( // evaluate in compile time not run time 
+//constalnt expressions for the vertex and fragment shader source code 
+constexpr const char *kVertexShader = R"GLSL( // enable compile time evaluation of the shader source code
 #version 330 core
 
 // Move each point onto the screen.
-layout(location = 0) in vec3 aPosition;
-layout(location = 1) in vec3 aNormal;
+layout(location = 0) in vec3 aPosition; // The position of the vertex in model space.
+layout(location = 1) in vec3 aNormal;   // The normal of the vertex in model space.
 
 // Matrices to move points from model space to world space, then view space, then clip space.
 uniform mat4 model;
@@ -132,7 +134,7 @@ void printShaderLog(GLuint object, bool isProgram) {
 // Prepare one shader.
 GLuint compileShader(GLenum type, const char *source) {
   GLuint shader = glCreateShader(type);
-  glShaderSource(shader, 1, &source, nullptr);
+  glShaderSource(shader, 1, &source, nullptr); // 
   glCompileShader(shader);
 
   GLint succeeded = GL_FALSE;
