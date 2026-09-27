@@ -49,7 +49,7 @@ void ShadowMap::beginDepthPass() const {
   glViewport(0, 0, size_, size_); // Set the viewport to the shadow-map size.
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
   glClear(GL_DEPTH_BUFFER_BIT);
-}
+} // Clear the depth buffer to prepare for rendering the scene from the light's perspective. This ensures that the depth values in the shadow map are accurate and not influenced by previous frames or other rendering operations.
 
 // Restore the default framebuffer and viewport after drawing the depth texture.
 void ShadowMap::endDepthPass(int windowWidth, int windowHeight) const {

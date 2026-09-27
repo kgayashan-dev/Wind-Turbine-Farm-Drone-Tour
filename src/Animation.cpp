@@ -26,7 +26,7 @@ void updateAnimation(SceneState &state, float deltaTime) { // Update the scene s
 
   // Move the vehicle and turn its wheels.
   if (state.vehicleMoving) {
-    state.vehicleX += state.vehicleSpeed * deltaTime;
+    state.vehicleX += state.vehicleSpeed * deltaTime; 
     state.wheelDegrees -=
         glm::degrees((state.vehicleSpeed * deltaTime) / kWheelRadius); // Update the wheel angle based on the vehicle speed, elapsed time, and wheel radius.
 

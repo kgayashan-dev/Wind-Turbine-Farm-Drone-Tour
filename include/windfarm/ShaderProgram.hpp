@@ -7,6 +7,6 @@
 namespace windfarm {
 
 GLuint createShaderProgram();
-GLuint createDepthShaderProgram();
+GLuint createDepthShaderProgram(); // Create the shader program for the depth rendering from the sun's point of view.
 
 } // namespace windfarm

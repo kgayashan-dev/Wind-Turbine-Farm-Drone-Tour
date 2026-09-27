@@ -74,7 +74,7 @@ namespace windfarm
     window =
         glfwCreateWindow(windowSize.width, windowSize.height, // Create the window.
                          "Wind Turbine Farm Drone Tour", nullptr, nullptr);
-    if (window == nullptr)
+    if (window == nullptr) // Check if the window was created successfully.
     {
       std::cerr << "Window creation failed.\n";
       return false;
@@ -89,8 +89,8 @@ namespace windfarm
     installInputCallbacks(window, &appContext);
 
     // Prepare drawing and controls.
-    shaderProgram = createShaderProgram();
-    if (shaderProgram == 0)
+    shaderProgram = createShaderProgram();// Create the shader program for rendering the scene with lighting and shadows.
+    if (shaderProgram == 0) // Check if the shader program was created successfully. If not, return false to indicate initialization failure.
     {
       return false;
     }
@@ -144,9 +144,9 @@ namespace windfarm
     const glm::mat4 lightSpaceMatrix = makeLightSpaceMatrix(state.sunPosition);
 
     // Pass 1: save the scene depth from the sun's point of view.
-    if (state.shadows)
+    if (state.shadows) 
     {
-      shadowMap.beginDepthPass();
+      shadowMap.beginDepthPass(); // Start the depth pass for rendering the shadow map.
       glEnable(GL_POLYGON_OFFSET_FILL);
       glPolygonOffset(2.0f, 4.0f);
       scene.renderDepth(depthShaderProgram, state, lightSpaceMatrix);
@@ -162,11 +162,12 @@ namespace windfarm
   }
 
   // Repeat until the window closes.
-  void Application::run()
+  void Application::run() 
   { // The main loop that runs until the window is closed.
     Scene scene;
     double previousTime = glfwGetTime(); // Get the current time in seconds.
 
+    // Loop until the user closes the window.
     while (!glfwWindowShouldClose(window))
     {
       const double currentTime = glfwGetTime();
@@ -187,7 +188,8 @@ namespace windfarm
   }
 
   // Release everything we opened.
-  void Application::shutdown()
+
+  void Application::shutdown() // 
   {
     if (controlPanelReady)
     {

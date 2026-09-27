@@ -18,19 +18,19 @@
 namespace windfarm {
 namespace {
 
-constexpr float kPi = 3.14159265358979323846f; // The value of pi, used for generating shapes.
+constexpr float kPi = 3.14159265358979323846f; // The value of pi, used for generating shapes. 
 
-// Send a shape to the graphics card.
+// Send a shape to the graphics card. GPU 
 Mesh uploadMesh(const std::vector<float> &vertices,
                 const std::vector<unsigned int> &indices) {
   Mesh mesh;
   mesh.indexCount = static_cast<GLsizei>(indices.size());
 
   glGenVertexArrays(1, &mesh.vao);
-  glGenBuffers(1, &mesh.vbo);
+  glGenBuffers(1, &mesh.vbo); // 
   glGenBuffers(1, &mesh.ebo);
 
-  glBindVertexArray(mesh.vao);
+  glBindVertexArray(mesh.vao); // 
 
   glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
   glBufferData(GL_ARRAY_BUFFER,
@@ -56,11 +56,11 @@ Mesh uploadMesh(const std::vector<float> &vertices,
 } // namespace
 
 // Make a box.
-Mesh createCube() {
-  const std::vector<float> vertices = {
-      -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  0.5f,  -0.5f,
+Mesh createCube() { //  6 faces
+  const std::vector<float> vertices = { // . Every vertex contains three position values and three normal values. Vertices are repeated for each face because the faces require different normal directions for correct lighting.
+      -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  0.5f,  -0.5f, // 
       0.5f,  0.0f,  0.0f,  1.0f,  0.5f,  0.5f,  0.5f,  0.0f,
-      0.0f,  1.0f,  -0.5f, 0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+      0.0f,  1.0f,  -0.5f, 0.5f,  0.5f,  0.0f,  0.0f,  1.0f, 
 
       0.5f,  -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, -0.5f, -0.5f,
       -0.5f, 0.0f,  0.0f,  -1.0f, -0.5f, 0.5f,  -0.5f, 0.0f,
@@ -82,17 +82,21 @@ Mesh createCube() {
       -0.5f, 0.0f,  -1.0f, 0.0f,  0.5f,  -0.5f, 0.5f,  0.0f,
       -1.0f, 0.0f,  -0.5f, -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,
   };
-
-  const std::vector<unsigned int> indices = {
-      0,  1,  2,  2,  3,  0,  4,  5,  6,  6,  7,  4,  8,  9,  10, 10, 11, 8,
-      12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20,
+// The index array usses OpenGL how to connect the cube’s vertices. Each group of three indices creates one triangle. 
+  const std::vector<unsigned int> indices = { // 
+0,  1,  2,   2,  3,  0,    // Front
+4,  5,  6,   6,  7,  4,    // Back
+8,  9, 10,  10, 11,  8,    // Left
+12, 13, 14,  14, 15, 12,   // Right
+16, 17, 18,  18, 19, 16,   // Top
+20, 21, 22,  22, 23, 20    // Bottom
   };
 
-  return uploadMesh(vertices, indices);
+  return uploadMesh(vertices, indices); // 
 }
 
 // Make a cylinder or tapered tower.
-Mesh createCylinder(int segments, float topRadius) {
+Mesh createCylinder(int segments, float topRadius) { // class
   std::vector<float> vertices;
   std::vector<unsigned int> indices;
   const float slope = 1.0f - topRadius;
@@ -120,7 +124,9 @@ Mesh createCylinder(int segments, float topRadius) {
                                    first + 3, first + 2});
   }
 
-  auto addCap = [&](float y, float radius, float normalY, bool reverse) {
+  // 
+  //a helper function that creates the top or bottom circular face of a cylinder
+  auto addCap = [&](float y, float radius, float normalY, bool reverse) { // 
     const auto centre = static_cast<unsigned int>(vertices.size() / 6);
     vertices.insert(vertices.end(), {0.0f, y, 0.0f, 0.0f, normalY, 0.0f});
     const unsigned int rimStart = centre + 1;
@@ -133,7 +139,8 @@ Mesh createCylinder(int segments, float topRadius) {
                        0.0f, normalY, 0.0f});
     }
 
-    for (int segment = 0; segment < segments; ++segment) {
+    // This loop travels around the cylinder one segment at a time. Every iteration generates one small section of the circular geometry. Increasing the segment count makes the cylinder appear smoother.
+    for (int segment = 0; segment < segments; ++segment) { // 
       const unsigned int first = rimStart + static_cast<unsigned int>(segment);
       const unsigned int second = first + 1;
       if (reverse) {
@@ -146,13 +153,13 @@ Mesh createCylinder(int segments, float topRadius) {
 
   addCap(0.0f, 1.0f, -1.0f, false);
   addCap(1.0f, topRadius, 1.0f, true);
-  return uploadMesh(vertices, indices);
+  return uploadMesh(vertices, indices); // Upload the mesh data to the GPU.
 }
 
 // Make a sphere.
 Mesh createSphere(int stacks, int slices) {
   std::vector<float> vertices;
-  std::vector<unsigned int> indices;
+  std::vector<unsigned int> indices; // 
 
   for (int stack = 0; stack <= stacks; ++stack) {
     const float phi =
@@ -168,7 +175,7 @@ Mesh createSphere(int stacks, int slices) {
   }
 
   // Join adjacent rings with two triangles per grid cell.
-  for (int stack = 0; stack < stacks; ++stack) {
+  for (int stack = 0; stack < stacks; ++stack) { 
     for (int slice = 0; slice < slices; ++slice) {
       const unsigned int first =
           static_cast<unsigned int>(stack * (slices + 1) + slice);
@@ -178,12 +185,12 @@ Mesh createSphere(int stacks, int slices) {
     }
   }
 
-  return uploadMesh(vertices, indices);
+  return uploadMesh(vertices, indices); // Upload the mesh data to the GPU.
 }
 
 // Free the shape memory.
-void destroyMesh(Mesh &mesh) {
-  glDeleteVertexArrays(1, &mesh.vao);
+void destroyMesh(Mesh &mesh) { // call from scene destructor to free the mesh memory
+  glDeleteVertexArrays(1, &mesh.vao); 
   glDeleteBuffers(1, &mesh.vbo);
   glDeleteBuffers(1, &mesh.ebo);
   mesh = {};
@@ -196,16 +203,16 @@ glm::mat4 makeTransform(glm::vec3 position, glm::vec3 rotationDegrees,
   model = glm::rotate(model, glm::radians(rotationDegrees.y),
                       glm::vec3(0.0f, 1.0f, 0.0f));
   model = glm::rotate(model, glm::radians(rotationDegrees.x),
-                      glm::vec3(1.0f, 0.0f, 0.0f));
+                      glm::vec3(1.0f, 0.0f, 0.0f)); // Rotate the model matrix by the specified rotation angles around the X, Y, and Z axes in degrees. The rotation is applied in the order of Y-axis, X-axis, and then Z-axis, which affects how the object is oriented in 3D space.
   model = glm::rotate(model, glm::radians(rotationDegrees.z),
                       glm::vec3(0.0f, 0.0f, 1.0f));
-  return glm::scale(model, scale);
+  return glm::scale(model, scale); // Scale the model matrix by the given scale vector, which adjusts the size of the object in 3D space.
 }
 
 // Send an on/off setting to the shader.
-void setBoolUniform(GLuint program, const char *name, bool value) {
-  glUniform1i(glGetUniformLocation(program, name), value ? 1 : 0);
-}
+void setBoolUniform(GLuint program, const char *name, bool value) { // hide the shadow 
+  glUniform1i(glGetUniformLocation(program, name), value ? 1 : 0); // Set the uniform variable in the shader program to 1 if the boolean value is true, or 0 if it is false. This allows the shader to use the boolean value for conditional rendering or other logic.
+} 
 
 // Draw one shape.
 
@@ -223,7 +230,7 @@ void drawMesh(GLuint program, const Mesh &mesh, const glm::mat4 &model,
   setBoolUniform(program, "emissive", emissive);
 
   glBindVertexArray(mesh.vao);
-  glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, nullptr);
+  glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, nullptr); // Draw the mesh using the index buffer, which allows for efficient rendering of complex shapes by reusing vertex data. The GL_TRIANGLES mode indicates that the indices define triangles, and GL_UNSIGNED_INT specifies the data type of the indices.
 }
 
-} // namespace windfarm
+} // namespace wind farm

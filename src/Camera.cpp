@@ -45,7 +45,7 @@ CameraFrame calculateCamera(const SceneState &state,
                        state.overviewRadius * std::sin(state.overviewAngle)};
 
     // Look toward a point above the centre of the farm.
-    return {position, {0.0f, 5.0f, 0.0f}};
+    return {position, {0.0f, 5.0f, 0.0f}}; 
   }
 
   // Any other mode uses a third- camera that follows the vehicle.

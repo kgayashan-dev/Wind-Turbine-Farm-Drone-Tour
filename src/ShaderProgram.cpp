@@ -93,14 +93,14 @@ void main() {
     float distanceFromLight = length(lightPosition - worldPosition);
     float attenuation =
         1.0 / (1.0 + 0.01 * distanceFromLight +
-               0.0006 * distanceFromLight * distanceFromLight);
+               0.0006 * distanceFromLight * distanceFromLight); // The attenuation factor is calculated based on the distance from the light source to the surface point. It reduces the intensity of the light as the distance increases, simulating the natural falloff of light in a scene.
 
-    float shadow = shadowsEnabled ? calculateShadow(N, L) : 0.0;
+    float shadow = shadowsEnabled ? calculateShadow(N, L) : 0.0; // if if shadows are enabled, calculate the shadow factor based on the surface normal and light direction; otherwise, set shadow to 0.0 (no shadow)
     vec3 ambientPart = 0.24 * objectColor;
     vec3 diffusePart =
-        (1.0 - 0.76 * shadow) * 0.94 * diffuse * objectColor;
+        (1.0 - 0.76 * shadow) * 0.94 * diffuse * objectColor; // The diffuse lighting component is modulated by the shadow factor, which reduces the intensity of the diffuse light based on how much the surface is in shadow. The ambient and diffuse components are combined to produce the final color of the fragment.
 
-    color = vec4(ambientPart + attenuation * diffusePart, 1.0);
+    color = vec4(ambientPart + attenuation * diffusePart, 1.0); // The final color is a combination of ambient and diffuse lighting, modulated by the attenuation factor based on distance from the light source, and adjusted for shadows if enabled.
 }
 )GLSL";
 
@@ -118,7 +118,6 @@ void main() {
     gl_Position = lightSpaceMatrix * model * vec4(aPosition, 1.0); // model view projection (MVP) matrix transforms the vertex position from model space to clip space
 }
 )GLSL";
-
 constexpr const char *kDepthFragmentShader = R"GLSL(
 #version 330 core
 
@@ -145,7 +144,7 @@ void printShaderLog(GLuint object, bool isProgram) {
   } else {
     glGetShaderInfoLog(object, length, nullptr, log.data());
   }
-  std::cerr << log << '\n';
+  std::cerr << log << '\n'; // 
 }
 
 // Compile a shader of the given type from the source code.

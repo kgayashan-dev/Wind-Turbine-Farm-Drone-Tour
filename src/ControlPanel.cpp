@@ -23,6 +23,7 @@ namespace windfarm
     // Show the animation controls.
     void drawAnimationControls(SceneState &state) // reference the sates
     {
+      // Show the animation controls.
       if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen)) // Show the animation .
       {
         ImGui::Checkbox("Drone movement", &state.droneMoving);
@@ -38,29 +39,36 @@ namespace windfarm
     // Show the camera mode and orbit parameters.
     void drawCameraControls(SceneState &state)
     {
-      if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))// Show the camera mode and orbit parameters.
+      if (ImGui::CollapsingHeader(
+              "Camera",
+              ImGuiTreeNodeFlags_DefaultOpen))
       {
-        // select camera mode
-        const char *modes[] = {"Drone route", "Overview orbit", "Vehicle follow"};
-        ImGui::Combo("Camera mode", &state.cameraMode, modes, 3);
+        const char *modes[] = {
+            "Drone route",
+            "Overview orbit",
+            "Vehicle follow"};
+
+        ImGui::Combo( //  combo selection 
+            "Camera mode",
+            &state.cameraMode,
+            modes,
+            3);
+
         if (state.cameraMode == 1)
         {
-          ImGui::SliderFloat("Orbit height", &state.overviewHeight, 7.0f, 30.0f,
-                             "%.1f");
-          ImGui::SliderFloat("Orbit radius", &state.overviewRadius, 24.0f, 58.0f,
-                             "%.1f");
-        }
-      }
-      {
-        // select camera mode
-        const char *modes[] = {"Drone route", "Overview orbit", "Vehicle follow"};
-        ImGui::Combo("Camera mode", &state.cameraMode, modes, 3);
-        if (state.cameraMode == 1)
-        {
-          ImGui::SliderFloat("Orbit height", &state.overviewHeight, 7.0f, 30.0f,
-                             "%.1f");
-          ImGui::SliderFloat("Orbit radius", &state.overviewRadius, 24.0f, 58.0f,
-                             "%.1f");
+          ImGui::SliderFloat( // 
+              "Orbit height",
+              &state.overviewHeight,
+              7.0f,
+              30.0f,
+              "%.1f");
+
+          ImGui::SliderFloat(
+              "Orbit radius",
+              &state.overviewRadius,
+              24.0f,
+              58.0f,
+              "%.1f");
         }
       }
     }
@@ -71,13 +79,13 @@ namespace windfarm
       if (ImGui::CollapsingHeader("Lighting and shadows",
                                   ImGuiTreeNodeFlags_DefaultOpen))
       {
-        ImGui::Checkbox("Enable lighting", &state.lighting);
+        ImGui::Checkbox("Enable lighting", &state.lighting); //  updates the state.lighting boolean variable based on the checkbox state. If checked, lighting calculations will be applied in the shader; if unchecked, the scene will be rendered without lighting effects.
         ImGui::SameLine();
-        ImGui::Checkbox("Enable shadows", &state.shadows);
+        ImGui::Checkbox("Enable shadows", &state.shadows); // 
         ImGui::SliderFloat("Sun X", &state.sunPosition.x, -50.0f, 50.0f, "%.1f");
-        ImGui::SliderFloat("Sun height", &state.sunPosition.y, 18.0f, 45.0f,
+        ImGui::SliderFloat("Sun height", &state.sunPosition.y, 18.0f, 45.0f, 
                            "%.1f");
-        ImGui::SliderFloat("Sun Z", &state.sunPosition.z, -50.0f, 50.0f, "%.1f");
+        ImGui::SliderFloat("Sun Z", &state.sunPosition.z, -50.0f, 50.0f, "%.1f"); //   forwar=d/backward position of the sun in the scene. The slider allows the user to adjust the Z-coordinate of the sun's position, which affects the direction and length of shadows cast by objects in the scene.
       }
     }
 
@@ -102,11 +110,12 @@ namespace windfarm
 
   bool initializeControlPanel(GLFWwindow *window) // Initialize the control panel's ImGui context and backends.
   {
+    // Create the ImGui context and configure it for keyboard navigation.
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
-    ImGui::StyleColorsDark();
+    ImGui::StyleColorsDark(); // 
     ImGuiStyle &style = ImGui::GetStyle();
     style.WindowRounding = 8.0f;
     style.FrameRounding = 5.0f;
@@ -128,16 +137,18 @@ namespace windfarm
   }
 
   // Refresh backend state before recording this frame's widgets.
-  void beginControlPanelFrame()
+  void beginControlPanelFrame() // 
   {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
   }
 
+
   void drawControlPanel(SceneState &state, const glm::vec3 &cameraPosition, // Draw the control panel's widgets to the screen.
                         const glm::vec3 &currentVehiclePosition)
   {
+    // Set the control panel's position and size, and begin a new window.
     ImGui::SetNextWindowPos(ImVec2(18.0f, 18.0f), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(350.0f, 0.0f), ImGuiCond_FirstUseEver);
     ImGui::Begin("Wind Farm Control Panel", nullptr,
