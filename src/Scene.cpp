@@ -15,21 +15,23 @@
 namespace windfarm {
 namespace {
 
-constexpr std::array<glm::vec3, 7> kTurbinePositions = {
+  // The positions of the turbines in the farm.
+constexpr std::array<glm::vec3, 6> kTurbinePositions = {
     glm::vec3{-15.0f, 0.0f, -11.0f}, glm::vec3{0.0f, 0.0f, -14.0f},
     glm::vec3{15.0f, 0.0f, -9.0f},   glm::vec3{-13.0f, 0.0f, 10.0f},
     glm::vec3{3.0f, 0.0f, 7.0f},     glm::vec3{17.0f, 0.0f, 13.0f},
-    glm::vec3{3.0f, 0.0f, -9.0f},
+    // glm::vec3{3.0f, 0.0f, -9.0f}, // apperd witout overlappi
 };
 
 } // namespace
 
+// The Scene class stores the meshes for the farm and draws them.
 Scene::Scene()
-    : cube_(createCube()), cylinder_(createCylinder(40)),
-      tower_(createCylinder(48, 0.42f)), cone_(createCylinder(40, 0.02f)),
+    : cube_(createCube()), cylinder_(createCylinder(40)), // Create the meshes for the farm objects.
+      tower_(createCylinder(48, 0.42f)), cone_(createCylinder(40, 0.02f)), // The tower is a tapered cylinder, and the cone is a very short cylinder with a small top radius.
       sphere_(createSphere(20, 32)) {}
 
-Scene::~Scene() {
+Scene::~Scene() { // Release the meshes for the farm objects.
   destroyMesh(cube_);
   destroyMesh(cylinder_);
   destroyMesh(tower_);
@@ -37,16 +39,17 @@ Scene::~Scene() {
   destroyMesh(sphere_);
 }
 
+// Draw the farm from the sun's point of view into the depth texture.
 void Scene::drawTerrain(GLuint program) const {
-  drawGround(program);
-  drawMountains(program);
-  drawBuilding(program);
-  drawTrees(program);
+  drawGround(program); // Draw the grass, road, and road markings.
+  drawMountains(program); // Draw the distant mountains and snowy peaks.
+  drawBuilding(program); // Draw the farm's building.
+  drawTrees(program); // Draw the trees along the farm's edges.
 }
 
 // These objects are rendered into the sun's depth texture.
 void Scene::drawShadowCasters(GLuint program, const SceneState &state) const {
-  drawTerrain(program);
+  drawTerrain(program); // Draw the grass, road, mountains, building, and trees.
   drawTurbines(program, state);
   drawVehicle(program, state);
 }
@@ -149,7 +152,7 @@ void Scene::drawTurbines(GLuint program, const SceneState &state) const {
     for (int blade = 0; blade < 3; ++blade) {
       const glm::mat4 bladeParent =
           rotor * glm::rotate(glm::mat4(1.0f),
-                              glm::radians(static_cast<float>(blade) * 120.0f),
+                              glm::radians(static_cast<float>(blade) * 120.0f), // Rotate each blade by 120 degrees around the rotor's axis to position them evenly.
                               glm::vec3(0.0f, 0.0f, 1.0f));
 
       drawMesh(program, cube_,
@@ -245,7 +248,7 @@ void Scene::render(GLuint program, const SceneState &state,
       glm::value_ptr(lightSpaceMatrix));
   glUniform3fv(glGetUniformLocation(program, "lightPosition"), 1,
                glm::value_ptr(state.sunPosition));
-  glUniform1i(glGetUniformLocation(program, "shadowMap"), 0);
+  glUniform1i(glGetUniformLocation(program, "shadowMap"), 0); 
   setBoolUniform(program, "lightingEnabled", state.lighting);
   setBoolUniform(program, "shadowsEnabled", state.shadows);
 
@@ -260,7 +263,7 @@ void Scene::render(GLuint program, const SceneState &state,
   drawMesh(program, sphere_,
            makeTransform(state.sunPosition, {0.0f, 0.0f, 0.0f},
                          {0.82f, 0.82f, 0.82f}),
-           {1.0f, 0.70f, 0.11f}, true);
+           {1.0f, 0.70f, 0.11f}, true); // Draw the sun as a small yellow sphere in the sky. true means the sun is emissive and does not receive lighting from other objects.
 }
 
 } // namespace windfarm

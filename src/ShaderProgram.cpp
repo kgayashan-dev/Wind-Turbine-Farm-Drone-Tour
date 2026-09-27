@@ -48,7 +48,7 @@ uniform vec3 lightPosition;
 uniform bool lightingEnabled;
 uniform bool shadowsEnabled;
 uniform bool emissive;
-uniform sampler2D shadowMap;
+uniform sampler2D shadowMap; // The shadow map texture.
 
 out vec4 color;
 
@@ -86,9 +86,9 @@ void main() {
         return;
     }
 
-    vec3 N = normalize(worldNormal);
-    vec3 L = normalize(lightPosition - worldPosition);
-    float diffuse = max(dot(N, L), 0.0);
+    vec3 N = normalize(worldNormal); // normal appears to be in world space, so no need to transform it
+    vec3 L = normalize(lightPosition - worldPosition); 
+    float diffuse = max(dot(N, L), 0.0); // dot product of the normalized light direction and the normalized surface normal gives the cosine of the angle between them, which is used to calculate the diffuse lighting component
 
     float distanceFromLight = length(lightPosition - worldPosition);
     float attenuation =
@@ -105,6 +105,7 @@ void main() {
 )GLSL";
 
 // The depth shader renders the scene from the sun and writes only a z value.
+//This defines the pair of shaders used for the shadow map depth pass
 constexpr const char *kDepthVertexShader = R"GLSL(
 #version 330 core
 
@@ -114,7 +115,7 @@ uniform mat4 model;
 uniform mat4 lightSpaceMatrix;
 
 void main() {
-    gl_Position = lightSpaceMatrix * model * vec4(aPosition, 1.0);
+    gl_Position = lightSpaceMatrix * model * vec4(aPosition, 1.0); // model view projection (MVP) matrix transforms the vertex position from model space to clip space
 }
 )GLSL";
 
@@ -137,7 +138,7 @@ void printShaderLog(GLuint object, bool isProgram) {
   if (length <= 1) {
     return;
   }
-
+// Allocate a string to hold the log and retrieve it.
   std::string log(static_cast<std::size_t>(length), '\0');
   if (isProgram) {
     glGetProgramInfoLog(object, length, nullptr, log.data());
@@ -147,6 +148,7 @@ void printShaderLog(GLuint object, bool isProgram) {
   std::cerr << log << '\n';
 }
 
+// Compile a shader of the given type from the source code.
 GLuint compileShader(GLenum type, const char *source) {
   GLuint shader = glCreateShader(type);
   glShaderSource(shader, 1, &source, nullptr);
@@ -162,6 +164,7 @@ GLuint compileShader(GLenum type, const char *source) {
   return shader;
 }
 
+// Create a shader program from the given vertex and fragment shader source code.
 GLuint createProgram(const char *vertexSource, const char *fragmentSource) {
   GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexSource);
   GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentSource);
@@ -176,6 +179,7 @@ GLuint createProgram(const char *vertexSource, const char *fragmentSource) {
     return 0;
   }
 
+  // Link the shaders into a program.
   GLuint program = glCreateProgram();
   glAttachShader(program, vertexShader);
   glAttachShader(program, fragmentShader);
@@ -196,12 +200,13 @@ GLuint createProgram(const char *vertexSource, const char *fragmentSource) {
 
 } // namespace
 
+// Create the shader program for the scene rendering with lighting and shadows.
 GLuint createShaderProgram() {
   return createProgram(kVertexShader, kFragmentShader);
 }
-
+/// Create the shader program for the depth rendering from the sun's point of view.
 GLuint createDepthShaderProgram() {
-  return createProgram(kDepthVertexShader, kDepthFragmentShader);
+  return createProgram(kDepthVertexShader, kDepthFragmentShader); // sun
 }
 
 } // namespace windfarm

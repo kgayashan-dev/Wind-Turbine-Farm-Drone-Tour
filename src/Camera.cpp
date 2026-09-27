@@ -48,7 +48,7 @@ CameraFrame calculateCamera(const SceneState &state,
     return {position, {0.0f, 5.0f, 0.0f}};
   }
 
-  // Any other mode uses a third-person camera that follows the vehicle.
+  // Any other mode uses a third- camera that follows the vehicle.
   const glm::vec3 position =
       currentVehiclePosition + glm::vec3(-9.0f, 4.5f, 7.0f);
 

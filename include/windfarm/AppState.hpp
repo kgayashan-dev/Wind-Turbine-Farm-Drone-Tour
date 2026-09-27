@@ -25,7 +25,7 @@ struct SceneState {
   float overviewAngle = 0.65f;
   float overviewRadius = 42.0f;
   float overviewHeight = 19.0f;
-  float bladeDegrees = 0.0f;
+  float bladeDegrees = 0.0f; // The same angle drives every turbine rotor.
   float vehicleX = -34.0f;
   float wheelDegrees = 0.0f;
 

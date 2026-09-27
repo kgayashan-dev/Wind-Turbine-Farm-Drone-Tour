@@ -9,7 +9,7 @@ struct GLFWwindow;
 namespace windfarm {
 
 struct AppContext {
-  SceneState *scene = nullptr;
+  SceneState *scene = nullptr; 
   WindowState *window = nullptr;
 };
 

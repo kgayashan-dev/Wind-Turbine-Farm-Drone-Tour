@@ -28,7 +28,7 @@ private:
   GLFWwindow *window = nullptr;
   GLuint shaderProgram = 0;
   GLuint depthShaderProgram = 0;
-  ShadowMap shadowMap;
+  ShadowMap shadowMap; // The depth texture and framebuffer used for shadows.
   bool controlPanelReady = false;
 };
 

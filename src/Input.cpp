@@ -25,7 +25,7 @@ void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
     return;
   }
 
-  context->window->width = std::max(width, 1);
+  context->window->width = std::max(width, 1); // `std::max` ensures the width is at least 1 pixel.
   context->window->height = std::max(height, 1);
   glViewport(0, 0, context->window->width, context->window->height);
 }
@@ -125,7 +125,7 @@ void processContinuousInput(GLFWwindow *window, SceneState &state,
     state.overviewRadius += 8.0f * deltaTime;
   }
 
-  state.overviewHeight = std::clamp(state.overviewHeight, 7.0f, 30.0f);
+  state.overviewHeight = std::clamp(state.overviewHeight, 7.0f, 30.0f); // Limit the height of the overview camera to a reasonable range.
   state.overviewRadius = std::clamp(state.overviewRadius, 24.0f, 58.0f);
 }
 
