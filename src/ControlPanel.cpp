@@ -21,7 +21,7 @@ namespace windfarm
   {
 
     // Show the animation controls.
-    void drawAnimationControls(SceneState &state)
+    void drawAnimationControls(SceneState &state) // reference the sates
     {
       if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen)) // Show the animation .
       {
@@ -38,7 +38,19 @@ namespace windfarm
     // Show the camera mode and orbit parameters.
     void drawCameraControls(SceneState &state)
     {
-      if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
+      if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))// Show the camera mode and orbit parameters.
+      {
+        // select camera mode
+        const char *modes[] = {"Drone route", "Overview orbit", "Vehicle follow"};
+        ImGui::Combo("Camera mode", &state.cameraMode, modes, 3);
+        if (state.cameraMode == 1)
+        {
+          ImGui::SliderFloat("Orbit height", &state.overviewHeight, 7.0f, 30.0f,
+                             "%.1f");
+          ImGui::SliderFloat("Orbit radius", &state.overviewRadius, 24.0f, 58.0f,
+                             "%.1f");
+        }
+      }
       {
         // select camera mode
         const char *modes[] = {"Drone route", "Overview orbit", "Vehicle follow"};
